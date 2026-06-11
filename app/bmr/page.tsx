@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { saveBmr } from "../favorites";
 
 export default function BmrPage() {
   const [sex, setSex] = useState<"male" | "female" | "">("");
@@ -35,6 +36,7 @@ export default function BmrPage() {
     const lo = Math.round((bmr * 0.9) / 10) * 10;
     const hi = Math.round((bmr * 1.1) / 10) * 10;
     setResult({ lo, hi, eqn });
+    saveBmr({ lo, hi });
   }
 
   const inputStyle = "w-full px-3 py-2.5 rounded-lg border bg-white";

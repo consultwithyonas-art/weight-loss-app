@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Food, getFavorites } from "../favorites";
+import { Food, getFavorites, getCustomFoods, saveCustomFoods, getBmr, BmrSaved } from "../favorites";
 
 const BASE: Food[] = [
   { name: "Chapati", emoji: "🫓", cat: "staple", portion: "1 piece", lo: 240, hi: 300, p: 6, c: 40, f: 9 },
@@ -24,16 +24,19 @@ const BASE: Food[] = [
 const SLOTS = ["Breakfast", "Lunch", "Dinner", "Snacks"] as const;
 type Slot = (typeof SLOTS)[number];
 
+const claudeLink = "https://claude.ai/new?q=" + encodeURIComponent("Estimate the calories and protein for this food and portion: ");
+
 export default function MealsPage() {
   const [meal, setMeal] = useState<Record<Slot, Food[]>>({ Breakfast: [], Lunch: [], Dinner: [], Snacks: [] });
   const [favs, setFavs] = useState<Food[]>([]);
   const [custom, setCustom] = useState<Food[]>([]);
+  const [bmr, setBmr] = useState<BmrSaved | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [cName, setCName] = useState("");
   const [cKcal, setCKcal] = useState("");
   const [cProt, setCProt] = useState("");
 
-  useEffect(() => { setFavs(getFavorites()); }, []);
+  useEffect(() => { setFavs(getFavorites()); setCustom(getCustomFoods()); setBmr(getBmr()); }, []);
 
   const add = (slot: Slot, food: Food) => setMeal((m) => ({ ...m, [slot]: [...m[slot], food] }));
   const remove = (slot: Slot, idx: number) => setMeal((m) => ({ ...m, [slot]: m[slot].filter((_, i) => i !== idx) }));
@@ -42,11 +45,11 @@ export default function MealsPage() {
     const kcal = parseFloat(cKcal);
     if (!cName.trim() || !(kcal > 0)) return;
     const food: Food = { name: cName.trim(), emoji: "🍽️", cat: "custom", portion: "1 serving", lo: Math.round(kcal * 0.9), hi: Math.round(kcal * 1.1), p: parseFloat(cProt) || 0, c: 0, f: 0 };
-    setCustom((c) => [food, ...c]);
+    const next = [food, ...custom];
+    setCustom(next); saveCustomFoods(next);
     setCName(""); setCKcal(""); setCProt(""); setShowAdd(false);
   };
 
-  // build the picker: favorites first, then custom, then base (no duplicates)
   const seen = new Set<string>();
   const picker: Food[] = [];
   [...favs, ...custom, ...BASE].forEach((f) => { if (!seen.has(f.name)) { seen.add(f.name); picker.push(f); } });
@@ -57,7 +60,11 @@ export default function MealsPage() {
   const protein = all.reduce((s, f) => s + f.p, 0);
   const mid = Math.round((lo + hi) / 2);
 
-  const claudeLink = "https://claude.ai/new?q=" + encodeURIComponent("Estimate the calories and protein for this food and portion: ");
+  // BMR reference: midpoint of the saved range
+  const ref = bmr ? Math.round((bmr.lo + bmr.hi) / 2) : null;
+  const refPct = ref ? Math.min(100, (mid / ref) * 100) : 0;
+  const leftLo = bmr ? bmr.lo - mid : null;
+  const leftHi = bmr ? bmr.hi - mid : null;
 
   return (
     <main className="min-h-screen">
@@ -82,17 +89,14 @@ export default function MealsPage() {
         <div className="text-sm font-bold tracking-widest uppercase mb-3" style={{ color: "var(--teal)" }}>Play · educational</div>
         <h1 className="font-serif-display font-bold mb-3" style={{ color: "var(--ink)", fontSize: "clamp(1.8rem, 4vw, 2.6rem)" }}>Build a day, see how it stacks up.</h1>
         <p className="text-lg max-w-2xl mb-6" style={{ color: "var(--muted)" }}>
-          Your hearted foods appear first. Add anything else, or create your own. This compares to a <em>generic</em> reference — not your personal plan.
+          Your saved foods appear first. Add anything else, or create your own.
         </p>
 
-        {/* Add-your-own bar */}
         <div className="mb-6 p-4 rounded-2xl border bg-white" style={{ borderColor: "var(--hair)" }}>
           {!showAdd ? (
             <div className="flex flex-wrap gap-3 items-center">
               <button onClick={() => setShowAdd(true)} className="px-4 py-2 rounded-lg font-semibold text-white" style={{ background: "var(--teal)" }}>+ Add your own food</button>
-              <a href={claudeLink} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold" style={{ color: "var(--teal)" }}>
-                Don&apos;t know the calories? Ask Claude →
-              </a>
+              <a href={claudeLink} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold" style={{ color: "var(--teal)" }}>Don&apos;t know the calories? Ask Claude →</a>
             </div>
           ) : (
             <div className="flex flex-wrap gap-3 items-end">
@@ -101,7 +105,6 @@ export default function MealsPage() {
               <div><label className="block text-xs mb-1" style={{ color: "var(--muted)" }}>Protein (g)</label><input value={cProt} onChange={(e) => setCProt(e.target.value)} type="number" className="w-24 px-3 py-2 rounded-lg border" style={{ borderColor: "var(--hair)" }} placeholder="opt." /></div>
               <button onClick={addCustom} className="px-4 py-2 rounded-lg font-semibold text-white" style={{ background: "var(--green)" }}>Add</button>
               <button onClick={() => setShowAdd(false)} className="px-3 py-2 text-sm" style={{ color: "var(--muted)" }}>Cancel</button>
-              <a href={claudeLink} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold ml-auto" style={{ color: "var(--teal)" }}>Ask Claude for an estimate →</a>
             </div>
           )}
         </div>
@@ -139,15 +142,34 @@ export default function MealsPage() {
             <div className="font-serif-display font-bold mb-4" style={{ color: "var(--ink)", fontSize: "1.8rem" }}>
               {lo === hi ? lo : `${lo}–${hi}`} <span className="text-sm font-sans font-normal" style={{ color: "var(--muted)" }}>kcal</span>
             </div>
-            <div className="mb-4">
-              <div className="flex justify-between text-sm mb-1.5"><span>Calories</span><span>{mid} / ~2000</span></div>
-              <div className="h-3 rounded-full overflow-hidden" style={{ background: "#EDF3F4" }}><div className="h-full rounded-full" style={{ width: `${Math.min(100, (mid / 2000) * 100)}%`, background: mid > 2200 ? "var(--coral)" : "var(--teal)" }} /></div>
-            </div>
+
+            {/* BMR reference bar */}
+            {bmr && ref ? (
+              <div className="mb-4">
+                <div className="flex justify-between text-sm mb-1.5"><span>vs your resting burn</span><span>{mid} / ~{ref}</span></div>
+                <div className="h-3 rounded-full overflow-hidden" style={{ background: "#EDF3F4" }}>
+                  <div className="h-full rounded-full" style={{ width: `${refPct}%`, background: mid > ref ? "var(--amber)" : "var(--teal)" }} />
+                </div>
+                <p className="text-xs mt-1.5" style={{ color: "var(--muted)" }}>
+                  {mid <= (bmr.hi)
+                    ? `Roughly ${Math.max(0, leftLo ?? 0)}–${Math.max(0, leftHi ?? 0)} kcal below your resting burn so far.`
+                    : `Above your resting burn — with daily activity that can still be fine.`}
+                </p>
+              </div>
+            ) : (
+              <div className="mb-4 p-3 rounded-xl text-sm" style={{ background: "var(--paper)", color: "var(--muted)" }}>
+                Want to see this against your resting burn? <Link href="/bmr" className="font-semibold" style={{ color: "var(--teal)" }}>Estimate your BMR →</Link>
+              </div>
+            )}
+
             <div className="mb-4">
               <div className="flex justify-between text-sm mb-1.5"><span>Protein</span><span>{protein} g / ~100 g</span></div>
               <div className="h-3 rounded-full overflow-hidden" style={{ background: "#EDF3F4" }}><div className="h-full rounded-full" style={{ width: `${Math.min(100, (protein / 100) * 100)}%`, background: "var(--green)" }} /></div>
             </div>
-            <p className="text-xs" style={{ color: "var(--muted)" }}>Bars compare to a generic ~2000 kcal / ~100 g reference day — a teaching aid, not your plan.</p>
+
+            <p className="text-xs" style={{ color: "var(--muted)" }}>
+              These are general reference guides, not a personal target. Your real plan comes after a quick health check.
+            </p>
             <Link href="/" className="block text-center mt-4 py-2.5 rounded-xl font-semibold text-white" style={{ background: "var(--teal)" }}>Start the program →</Link>
           </div>
         </div>
