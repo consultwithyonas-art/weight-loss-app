@@ -91,7 +91,7 @@ export default function MealsPage() {
     <main className="min-h-screen">
       <header style={{ background: "var(--ink)" }} className="px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/start" className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-serif-display text-xl font-bold" style={{ background: "var(--teal)" }}>+</div>
             <div className="text-white">
               <div className="font-bold leading-tight">The Weight-Loss System</div>
@@ -202,7 +202,7 @@ export default function MealsPage() {
             </div>
 
             <p className="text-xs" style={{ color: "var(--muted)" }}>These are general reference guides, not a personal target. Your real plan comes after a quick health check.</p>
-            <Link href="/" className="block text-center mt-4 py-2.5 rounded-xl font-semibold text-white" style={{ background: "var(--teal)" }}>Start the program →</Link>
+            <Link href="/start" className="block text-center mt-4 py-2.5 rounded-xl font-semibold text-white" style={{ background: "var(--teal)" }}>Start the program →</Link>
           </div>
         </div>
 

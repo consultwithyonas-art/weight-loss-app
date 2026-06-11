@@ -84,7 +84,7 @@ export default function ToolsPage() {
     <main className="min-h-screen">
       <header style={{ background: "var(--ink)" }} className="px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/start" className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-serif-display text-xl font-bold" style={{ background: "var(--teal)" }}>+</div>
             <div className="text-white">
               <div className="font-bold leading-tight">The Weight-Loss System</div>
@@ -174,7 +174,7 @@ export default function ToolsPage() {
           </div>
         </div>
 
-        <div className="mt-10"><Link href="/" className="font-semibold" style={{ color: "var(--teal)" }}>← Back home</Link></div>
+        <div className="mt-10"><Link href="/start" className="font-semibold" style={{ color: "var(--teal)" }}>← Back home</Link></div>
       </section>
     </main>
   );

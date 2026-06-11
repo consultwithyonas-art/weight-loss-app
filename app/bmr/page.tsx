@@ -46,7 +46,7 @@ export default function BmrPage() {
       {/* Header */}
       <header style={{ background: "var(--ink)" }} className="px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/start" className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-serif-display text-xl font-bold" style={{ background: "var(--teal)" }}>+</div>
             <div className="text-white">
               <div className="font-bold leading-tight">The Weight-Loss System</div>
@@ -118,7 +118,7 @@ export default function BmrPage() {
                   <span className="text-sm flex-1" style={{ color: "#9a3a23", minWidth: "200px" }}>
                     <b>This is a general estimate.</b> Your own calorie target — and a plan that&apos;s safe for you — needs a quick health check first.
                   </span>
-                  <Link href="/" className="px-4 py-2 rounded-lg font-semibold text-white text-sm" style={{ background: "var(--teal)" }}>
+                  <Link href="/start" className="px-4 py-2 rounded-lg font-semibold text-white text-sm" style={{ background: "var(--teal)" }}>
                     Start the program →
                   </Link>
                 </div>
