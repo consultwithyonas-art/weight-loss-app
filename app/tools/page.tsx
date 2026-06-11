@@ -83,6 +83,7 @@ export default function ToolsPage() {
           <nav className="ml-auto flex gap-2">
             <Link href="/tools" className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white" style={{ background: "rgba(255,255,255,0.12)" }}>Food</Link>
             <Link href="/bmr" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>BMR</Link>
+            <Link href="/meals" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>Meals</Link>
           </nav>
         </div>
       </header>
