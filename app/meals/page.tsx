@@ -23,11 +23,12 @@ const BASE: Food[] = [
 
 const SLOTS = ["Breakfast", "Lunch", "Dinner", "Snacks"] as const;
 type Slot = (typeof SLOTS)[number];
+type Line = { food: Food; qty: number };
 
 const claudeLink = "https://claude.ai/new?q=" + encodeURIComponent("Estimate the calories and protein for this food and portion: ");
 
 export default function MealsPage() {
-  const [meal, setMeal] = useState<Record<Slot, Food[]>>({ Breakfast: [], Lunch: [], Dinner: [], Snacks: [] });
+  const [meal, setMeal] = useState<Record<Slot, Line[]>>({ Breakfast: [], Lunch: [], Dinner: [], Snacks: [] });
   const [favs, setFavs] = useState<Food[]>([]);
   const [custom, setCustom] = useState<Food[]>([]);
   const [bmr, setBmr] = useState<BmrSaved | null>(null);
@@ -38,8 +39,28 @@ export default function MealsPage() {
 
   useEffect(() => { setFavs(getFavorites()); setCustom(getCustomFoods()); setBmr(getBmr()); }, []);
 
-  const add = (slot: Slot, food: Food) => setMeal((m) => ({ ...m, [slot]: [...m[slot], food] }));
-  const remove = (slot: Slot, idx: number) => setMeal((m) => ({ ...m, [slot]: m[slot].filter((_, i) => i !== idx) }));
+  // add a food to a slot (or +1 if already there)
+  const addFood = (slot: Slot, food: Food) => {
+    setMeal((m) => {
+      const lines = m[slot];
+      const idx = lines.findIndex((l) => l.food.name === food.name);
+      if (idx >= 0) {
+        const copy = [...lines];
+        copy[idx] = { ...copy[idx], qty: copy[idx].qty + 1 };
+        return { ...m, [slot]: copy };
+      }
+      return { ...m, [slot]: [...lines, { food, qty: 1 }] };
+    });
+  };
+  // change quantity; removing at 0
+  const changeQty = (slot: Slot, name: string, delta: number) => {
+    setMeal((m) => {
+      const lines = m[slot]
+        .map((l) => (l.food.name === name ? { ...l, qty: l.qty + delta } : l))
+        .filter((l) => l.qty > 0);
+      return { ...m, [slot]: lines };
+    });
+  };
 
   const addCustom = () => {
     const kcal = parseFloat(cKcal);
@@ -50,21 +71,21 @@ export default function MealsPage() {
     setCName(""); setCKcal(""); setCProt(""); setShowAdd(false);
   };
 
+  // full unique food list
   const seen = new Set<string>();
-  const picker: Food[] = [];
-  [...favs, ...custom, ...BASE].forEach((f) => { if (!seen.has(f.name)) { seen.add(f.name); picker.push(f); } });
+  const allFoods: Food[] = [];
+  [...favs, ...custom, ...BASE].forEach((f) => { if (!seen.has(f.name)) { seen.add(f.name); allFoods.push(f); } });
 
-  const all = SLOTS.flatMap((s) => meal[s]);
-  const lo = all.reduce((s, f) => s + f.lo, 0);
-  const hi = all.reduce((s, f) => s + f.hi, 0);
-  const protein = all.reduce((s, f) => s + f.p, 0);
+  const lines = SLOTS.flatMap((s) => meal[s]);
+  const lo = lines.reduce((s, l) => s + l.food.lo * l.qty, 0);
+  const hi = lines.reduce((s, l) => s + l.food.hi * l.qty, 0);
+  const protein = lines.reduce((s, l) => s + l.food.p * l.qty, 0);
   const mid = Math.round((lo + hi) / 2);
 
-  // BMR reference: midpoint of the saved range
   const ref = bmr ? Math.round((bmr.lo + bmr.hi) / 2) : null;
   const refPct = ref ? Math.min(100, (mid / ref) * 100) : 0;
-  const leftLo = bmr ? bmr.lo - mid : null;
-  const leftHi = bmr ? bmr.hi - mid : null;
+  const leftLo = bmr ? Math.max(0, bmr.lo - mid) : 0;
+  const leftHi = bmr ? Math.max(0, bmr.hi - mid) : 0;
 
   return (
     <main className="min-h-screen">
@@ -89,7 +110,7 @@ export default function MealsPage() {
         <div className="text-sm font-bold tracking-widest uppercase mb-3" style={{ color: "var(--teal)" }}>Play · educational</div>
         <h1 className="font-serif-display font-bold mb-3" style={{ color: "var(--ink)", fontSize: "clamp(1.8rem, 4vw, 2.6rem)" }}>Build a day, see how it stacks up.</h1>
         <p className="text-lg max-w-2xl mb-6" style={{ color: "var(--muted)" }}>
-          Your saved foods appear first. Add anything else, or create your own.
+          Tap a food to add it. Use − and + to set how much. Your saved foods appear first.
         </p>
 
         <div className="mb-6 p-4 rounded-2xl border bg-white" style={{ borderColor: "var(--hair)" }}>
@@ -111,30 +132,46 @@ export default function MealsPage() {
 
         <div className="grid gap-6" style={{ gridTemplateColumns: "1fr minmax(260px, 320px)" }}>
           <div className="flex flex-col gap-4">
-            {SLOTS.map((slot) => (
-              <div key={slot} className="bg-white rounded-2xl p-4 border" style={{ borderColor: "var(--hair)" }}>
-                <h3 className="font-serif-display font-bold mb-2" style={{ color: "var(--ink)" }}>{slot}</h3>
-                <div className="flex flex-col gap-1.5 mb-3">
-                  {meal[slot].length === 0 && <span className="text-sm" style={{ color: "var(--muted)" }}>tap foods below to add</span>}
-                  {meal[slot].map((f, i) => (
-                    <div key={i} className="flex justify-between items-center text-sm rounded-lg px-3 py-2" style={{ background: "var(--paper)" }}>
-                      <span>{f.emoji} {f.name}</span>
-                      <span className="flex items-center gap-2">{f.lo}–{f.hi} kcal<button onClick={() => remove(slot, i)} style={{ color: "var(--coral)" }} aria-label="Remove">✕</button></span>
-                    </div>
-                  ))}
+            {SLOTS.map((slot) => {
+              const usedNames = new Set(meal[slot].map((l) => l.food.name));
+              const available = allFoods.filter((f) => !usedNames.has(f.name));
+              return (
+                <div key={slot} className="bg-white rounded-2xl p-4 border" style={{ borderColor: "var(--hair)" }}>
+                  <h3 className="font-serif-display font-bold mb-2" style={{ color: "var(--ink)" }}>{slot}</h3>
+
+                  {/* chosen items with qty controls */}
+                  <div className="flex flex-col gap-1.5 mb-3">
+                    {meal[slot].length === 0 && <span className="text-sm" style={{ color: "var(--muted)" }}>tap foods below to add</span>}
+                    {meal[slot].map((l) => (
+                      <div key={l.food.name} className="flex justify-between items-center text-sm rounded-lg px-3 py-2" style={{ background: "var(--paper)" }}>
+                        <span>{l.food.emoji} {l.food.name}</span>
+                        <span className="flex items-center gap-2">
+                          <span style={{ color: "var(--muted)" }}>{l.food.lo * l.qty}–{l.food.hi * l.qty} kcal</span>
+                          <span className="flex items-center gap-1.5">
+                            <button onClick={() => changeQty(slot, l.food.name, -1)} className="w-6 h-6 rounded-full border font-bold leading-none" style={{ borderColor: "var(--hair)", color: "var(--coral)" }} aria-label="Less">−</button>
+                            <span className="w-5 text-center font-semibold">{l.qty}</span>
+                            <button onClick={() => changeQty(slot, l.food.name, 1)} className="w-6 h-6 rounded-full border font-bold leading-none" style={{ borderColor: "var(--hair)", color: "var(--green)" }} aria-label="More">+</button>
+                          </span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* picker — only foods not already chosen */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {available.map((f) => {
+                      const isFavorite = favs.some((x) => x.name === f.name);
+                      return (
+                        <button key={f.name} onClick={() => addFood(slot, f)} className="rounded-full border px-2.5 py-1 text-xs" style={{ borderColor: isFavorite ? "var(--coral)" : "var(--hair)", background: "white" }}>
+                          {isFavorite ? "♥ " : ""}{f.emoji} {f.name}
+                        </button>
+                      );
+                    })}
+                    {available.length === 0 && <span className="text-xs" style={{ color: "var(--muted)" }}>all foods added to this meal</span>}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {picker.map((f) => {
-                    const isFavorite = favs.some((x) => x.name === f.name);
-                    return (
-                      <button key={f.name} onClick={() => add(slot, f)} className="rounded-full border px-2.5 py-1 text-xs" style={{ borderColor: isFavorite ? "var(--coral)" : "var(--hair)", background: "white" }}>
-                        {isFavorite ? "♥ " : ""}{f.emoji} {f.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="bg-white rounded-2xl p-6 border h-fit sticky top-4" style={{ borderColor: "var(--hair)" }}>
@@ -143,7 +180,6 @@ export default function MealsPage() {
               {lo === hi ? lo : `${lo}–${hi}`} <span className="text-sm font-sans font-normal" style={{ color: "var(--muted)" }}>kcal</span>
             </div>
 
-            {/* BMR reference bar */}
             {bmr && ref ? (
               <div className="mb-4">
                 <div className="flex justify-between text-sm mb-1.5"><span>vs your resting burn</span><span>{mid} / ~{ref}</span></div>
@@ -151,9 +187,7 @@ export default function MealsPage() {
                   <div className="h-full rounded-full" style={{ width: `${refPct}%`, background: mid > ref ? "var(--amber)" : "var(--teal)" }} />
                 </div>
                 <p className="text-xs mt-1.5" style={{ color: "var(--muted)" }}>
-                  {mid <= (bmr.hi)
-                    ? `Roughly ${Math.max(0, leftLo ?? 0)}–${Math.max(0, leftHi ?? 0)} kcal below your resting burn so far.`
-                    : `Above your resting burn — with daily activity that can still be fine.`}
+                  {mid <= bmr.hi ? `Roughly ${leftLo}–${leftHi} kcal below your resting burn so far.` : `Above your resting burn — with daily activity that can still be fine.`}
                 </p>
               </div>
             ) : (
@@ -167,9 +201,7 @@ export default function MealsPage() {
               <div className="h-3 rounded-full overflow-hidden" style={{ background: "#EDF3F4" }}><div className="h-full rounded-full" style={{ width: `${Math.min(100, (protein / 100) * 100)}%`, background: "var(--green)" }} /></div>
             </div>
 
-            <p className="text-xs" style={{ color: "var(--muted)" }}>
-              These are general reference guides, not a personal target. Your real plan comes after a quick health check.
-            </p>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>These are general reference guides, not a personal target. Your real plan comes after a quick health check.</p>
             <Link href="/" className="block text-center mt-4 py-2.5 rounded-xl font-semibold text-white" style={{ background: "var(--teal)" }}>Start the program →</Link>
           </div>
         </div>
