@@ -39,7 +39,6 @@ export default function MealsPage() {
 
   useEffect(() => { setFavs(getFavorites()); setCustom(getCustomFoods()); setBmr(getBmr()); }, []);
 
-  // add a food to a slot (or +1 if already there)
   const addFood = (slot: Slot, food: Food) => {
     setMeal((m) => {
       const lines = m[slot];
@@ -52,14 +51,8 @@ export default function MealsPage() {
       return { ...m, [slot]: [...lines, { food, qty: 1 }] };
     });
   };
-  // change quantity; removing at 0
   const changeQty = (slot: Slot, name: string, delta: number) => {
-    setMeal((m) => {
-      const lines = m[slot]
-        .map((l) => (l.food.name === name ? { ...l, qty: l.qty + delta } : l))
-        .filter((l) => l.qty > 0);
-      return { ...m, [slot]: lines };
-    });
+    setMeal((m) => ({ ...m, [slot]: m[slot].map((l) => (l.food.name === name ? { ...l, qty: l.qty + delta } : l)).filter((l) => l.qty > 0) }));
   };
 
   const addCustom = () => {
@@ -71,7 +64,6 @@ export default function MealsPage() {
     setCName(""); setCKcal(""); setCProt(""); setShowAdd(false);
   };
 
-  // full unique food list
   const seen = new Set<string>();
   const allFoods: Food[] = [];
   [...favs, ...custom, ...BASE].forEach((f) => { if (!seen.has(f.name)) { seen.add(f.name); allFoods.push(f); } });
@@ -87,18 +79,50 @@ export default function MealsPage() {
   const leftLo = bmr ? Math.max(0, bmr.lo - mid) : 0;
   const leftHi = bmr ? Math.max(0, bmr.hi - mid) : 0;
 
+  const SummaryInner = () => (
+    <>
+      <div className="text-xs font-bold tracking-widest uppercase" style={{ color: "var(--teal)" }}>Day total</div>
+      <div className="font-serif-display font-bold mb-4" style={{ color: "var(--ink)", fontSize: "1.8rem" }}>
+        {lo === hi ? lo : `${lo}–${hi}`} <span className="text-sm font-sans font-normal" style={{ color: "var(--muted)" }}>kcal</span>
+      </div>
+      {bmr && ref ? (
+        <div className="mb-4">
+          <div className="flex justify-between text-sm mb-1.5"><span>vs your resting burn</span><span>{mid} / ~{ref}</span></div>
+          <div className="h-3 rounded-full overflow-hidden" style={{ background: "#EDF3F4" }}>
+            <div className="h-full rounded-full" style={{ width: `${refPct}%`, background: mid > ref ? "var(--amber)" : "var(--teal)", transition: "width 0.4s ease" }} />
+          </div>
+          <p className="text-xs mt-1.5" style={{ color: "var(--muted)" }}>
+            {mid <= bmr.hi ? `Roughly ${leftLo}–${leftHi} kcal below your resting burn so far.` : `Above your resting burn — with daily activity that can still be fine.`}
+          </p>
+        </div>
+      ) : (
+        <div className="mb-4 p-3 rounded-xl text-sm" style={{ background: "var(--paper)", color: "var(--muted)" }}>
+          See this against your resting burn? <Link href="/bmr" className="font-semibold" style={{ color: "var(--teal)" }}>Estimate your BMR →</Link>
+        </div>
+      )}
+      <div className="mb-4">
+        <div className="flex justify-between text-sm mb-1.5"><span>Protein</span><span>{protein} g / ~100 g</span></div>
+        <div className="h-3 rounded-full overflow-hidden" style={{ background: "#EDF3F4" }}>
+          <div className="h-full rounded-full" style={{ width: `${Math.min(100, (protein / 100) * 100)}%`, background: "var(--green)", transition: "width 0.4s ease" }} />
+        </div>
+      </div>
+      <p className="text-xs" style={{ color: "var(--muted)" }}>General reference guides, not a personal target. Your real plan comes after a quick health check.</p>
+      <Link href="/start" className="block text-center mt-4 py-3 rounded-xl font-semibold text-white" style={{ background: "var(--teal)" }}>Start the program →</Link>
+    </>
+  );
+
   return (
-    <main className="min-h-screen">
-      <header style={{ background: "var(--ink)" }} className="px-6 py-4">
+    <main className="min-h-screen pb-44 lg:pb-12">
+      <header style={{ background: "var(--ink)" }} className="px-5 py-4">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
-          <Link href="/start" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-serif-display text-xl font-bold" style={{ background: "var(--teal)" }}>+</div>
             <div className="text-white">
-              <div className="font-bold leading-tight">The Weight-Loss System</div>
-              <div className="text-xs tracking-widest uppercase" style={{ color: "var(--mint)" }}>Open tools · free to explore</div>
+              <div className="font-bold leading-tight text-sm sm:text-base">The Weight-Loss System</div>
+              <div className="text-[10px] sm:text-xs tracking-widest uppercase" style={{ color: "var(--mint)" }}>Open tools</div>
             </div>
           </Link>
-          <nav className="ml-auto flex gap-2">
+          <nav className="ml-auto flex gap-1.5">
             <Link href="/tools" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>Food</Link>
             <Link href="/bmr" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>BMR</Link>
             <Link href="/meals" className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white" style={{ background: "rgba(255,255,255,0.12)" }}>Meals</Link>
@@ -106,31 +130,31 @@ export default function MealsPage() {
         </div>
       </header>
 
-      <section className="max-w-5xl mx-auto px-6 py-12">
+      <section className="max-w-5xl mx-auto px-5 py-8 sm:py-12 rise">
         <div className="text-sm font-bold tracking-widest uppercase mb-3" style={{ color: "var(--teal)" }}>Play · educational</div>
-        <h1 className="font-serif-display font-bold mb-3" style={{ color: "var(--ink)", fontSize: "clamp(1.8rem, 4vw, 2.6rem)" }}>Build a day, see how it stacks up.</h1>
-        <p className="text-lg max-w-2xl mb-6" style={{ color: "var(--muted)" }}>
+        <h1 className="font-serif-display font-bold mb-3" style={{ color: "var(--ink)", fontSize: "clamp(1.7rem, 6vw, 2.6rem)" }}>Build a day, see how it stacks up.</h1>
+        <p className="text-base sm:text-lg max-w-2xl mb-6" style={{ color: "var(--muted)" }}>
           Tap a food to add it. Use − and + to set how much. Your saved foods appear first.
         </p>
 
         <div className="mb-6 p-4 rounded-2xl border bg-white" style={{ borderColor: "var(--hair)" }}>
           {!showAdd ? (
             <div className="flex flex-wrap gap-3 items-center">
-              <button onClick={() => setShowAdd(true)} className="px-4 py-2 rounded-lg font-semibold text-white" style={{ background: "var(--teal)" }}>+ Add your own food</button>
+              <button onClick={() => setShowAdd(true)} className="px-4 py-2.5 rounded-lg font-semibold text-white" style={{ background: "var(--teal)" }}>+ Add your own food</button>
               <a href={claudeLink} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold" style={{ color: "var(--teal)" }}>Don&apos;t know the calories? Ask Claude →</a>
             </div>
           ) : (
             <div className="flex flex-wrap gap-3 items-end">
-              <div><label className="block text-xs mb-1" style={{ color: "var(--muted)" }}>Food name</label><input value={cName} onChange={(e) => setCName(e.target.value)} className="px-3 py-2 rounded-lg border" style={{ borderColor: "var(--hair)" }} placeholder="e.g. Kachumbari" /></div>
-              <div><label className="block text-xs mb-1" style={{ color: "var(--muted)" }}>Calories</label><input value={cKcal} onChange={(e) => setCKcal(e.target.value)} type="number" className="w-24 px-3 py-2 rounded-lg border" style={{ borderColor: "var(--hair)" }} placeholder="kcal" /></div>
-              <div><label className="block text-xs mb-1" style={{ color: "var(--muted)" }}>Protein (g)</label><input value={cProt} onChange={(e) => setCProt(e.target.value)} type="number" className="w-24 px-3 py-2 rounded-lg border" style={{ borderColor: "var(--hair)" }} placeholder="opt." /></div>
-              <button onClick={addCustom} className="px-4 py-2 rounded-lg font-semibold text-white" style={{ background: "var(--green)" }}>Add</button>
-              <button onClick={() => setShowAdd(false)} className="px-3 py-2 text-sm" style={{ color: "var(--muted)" }}>Cancel</button>
+              <div className="flex-1 min-w-[140px]"><label className="block text-xs mb-1" style={{ color: "var(--muted)" }}>Food name</label><input value={cName} onChange={(e) => setCName(e.target.value)} className="w-full px-3 py-2.5 rounded-lg border" style={{ borderColor: "var(--hair)" }} placeholder="e.g. Kachumbari" /></div>
+              <div><label className="block text-xs mb-1" style={{ color: "var(--muted)" }}>Calories</label><input value={cKcal} onChange={(e) => setCKcal(e.target.value)} type="number" inputMode="numeric" className="w-24 px-3 py-2.5 rounded-lg border" style={{ borderColor: "var(--hair)" }} placeholder="kcal" /></div>
+              <div><label className="block text-xs mb-1" style={{ color: "var(--muted)" }}>Protein</label><input value={cProt} onChange={(e) => setCProt(e.target.value)} type="number" inputMode="numeric" className="w-20 px-3 py-2.5 rounded-lg border" style={{ borderColor: "var(--hair)" }} placeholder="g" /></div>
+              <button onClick={addCustom} className="px-4 py-2.5 rounded-lg font-semibold text-white" style={{ background: "var(--green)" }}>Add</button>
+              <button onClick={() => setShowAdd(false)} className="px-3 py-2.5 text-sm" style={{ color: "var(--muted)" }}>Cancel</button>
             </div>
           )}
         </div>
 
-        <div className="grid gap-6" style={{ gridTemplateColumns: "1fr minmax(260px, 320px)" }}>
+        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
           <div className="flex flex-col gap-4">
             {SLOTS.map((slot) => {
               const usedNames = new Set(meal[slot].map((l) => l.food.name));
@@ -138,31 +162,27 @@ export default function MealsPage() {
               return (
                 <div key={slot} className="bg-white rounded-2xl p-4 border" style={{ borderColor: "var(--hair)" }}>
                   <h3 className="font-serif-display font-bold mb-2" style={{ color: "var(--ink)" }}>{slot}</h3>
-
-                  {/* chosen items with qty controls */}
                   <div className="flex flex-col gap-1.5 mb-3">
                     {meal[slot].length === 0 && <span className="text-sm" style={{ color: "var(--muted)" }}>tap foods below to add</span>}
                     {meal[slot].map((l) => (
-                      <div key={l.food.name} className="flex justify-between items-center text-sm rounded-lg px-3 py-2" style={{ background: "var(--paper)" }}>
-                        <span>{l.food.emoji} {l.food.name}</span>
-                        <span className="flex items-center gap-2">
-                          <span style={{ color: "var(--muted)" }}>{l.food.lo * l.qty}–{l.food.hi * l.qty} kcal</span>
-                          <span className="flex items-center gap-1.5">
-                            <button onClick={() => changeQty(slot, l.food.name, -1)} className="w-6 h-6 rounded-full border font-bold leading-none" style={{ borderColor: "var(--hair)", color: "var(--coral)" }} aria-label="Less">−</button>
+                      <div key={l.food.name} className="flex justify-between items-center text-sm rounded-lg px-3 py-2.5 rise" style={{ background: "var(--paper)" }}>
+                        <span className="font-medium">{l.food.emoji} {l.food.name}</span>
+                        <span className="flex items-center gap-2.5">
+                          <span style={{ color: "var(--muted)" }}>{l.food.lo * l.qty}–{l.food.hi * l.qty}</span>
+                          <span className="flex items-center gap-2">
+                            <button onClick={() => changeQty(slot, l.food.name, -1)} className="w-8 h-8 rounded-full border font-bold text-lg leading-none flex items-center justify-center" style={{ borderColor: "var(--hair)", color: "var(--coral)" }} aria-label="Less">−</button>
                             <span className="w-5 text-center font-semibold">{l.qty}</span>
-                            <button onClick={() => changeQty(slot, l.food.name, 1)} className="w-6 h-6 rounded-full border font-bold leading-none" style={{ borderColor: "var(--hair)", color: "var(--green)" }} aria-label="More">+</button>
+                            <button onClick={() => changeQty(slot, l.food.name, 1)} className="w-8 h-8 rounded-full border font-bold text-lg leading-none flex items-center justify-center" style={{ borderColor: "var(--hair)", color: "var(--green)" }} aria-label="More">+</button>
                           </span>
                         </span>
                       </div>
                     ))}
                   </div>
-
-                  {/* picker — only foods not already chosen */}
                   <div className="flex flex-wrap gap-1.5">
                     {available.map((f) => {
                       const isFavorite = favs.some((x) => x.name === f.name);
                       return (
-                        <button key={f.name} onClick={() => addFood(slot, f)} className="rounded-full border px-2.5 py-1 text-xs" style={{ borderColor: isFavorite ? "var(--coral)" : "var(--hair)", background: "white" }}>
+                        <button key={f.name} onClick={() => addFood(slot, f)} className="rounded-full border px-3 py-1.5 text-sm" style={{ borderColor: isFavorite ? "var(--coral)" : "var(--hair)", background: "white" }}>
                           {isFavorite ? "♥ " : ""}{f.emoji} {f.name}
                         </button>
                       );
@@ -174,40 +194,34 @@ export default function MealsPage() {
             })}
           </div>
 
-          <div className="bg-white rounded-2xl p-6 border h-fit sticky top-4" style={{ borderColor: "var(--hair)" }}>
-            <div className="text-xs font-bold tracking-widest uppercase" style={{ color: "var(--teal)" }}>Day total</div>
-            <div className="font-serif-display font-bold mb-4" style={{ color: "var(--ink)", fontSize: "1.8rem" }}>
-              {lo === hi ? lo : `${lo}–${hi}`} <span className="text-sm font-sans font-normal" style={{ color: "var(--muted)" }}>kcal</span>
-            </div>
-
-            {bmr && ref ? (
-              <div className="mb-4">
-                <div className="flex justify-between text-sm mb-1.5"><span>vs your resting burn</span><span>{mid} / ~{ref}</span></div>
-                <div className="h-3 rounded-full overflow-hidden" style={{ background: "#EDF3F4" }}>
-                  <div className="h-full rounded-full" style={{ width: `${refPct}%`, background: mid > ref ? "var(--amber)" : "var(--teal)" }} />
-                </div>
-                <p className="text-xs mt-1.5" style={{ color: "var(--muted)" }}>
-                  {mid <= bmr.hi ? `Roughly ${leftLo}–${leftHi} kcal below your resting burn so far.` : `Above your resting burn — with daily activity that can still be fine.`}
-                </p>
-              </div>
-            ) : (
-              <div className="mb-4 p-3 rounded-xl text-sm" style={{ background: "var(--paper)", color: "var(--muted)" }}>
-                Want to see this against your resting burn? <Link href="/bmr" className="font-semibold" style={{ color: "var(--teal)" }}>Estimate your BMR →</Link>
-              </div>
-            )}
-
-            <div className="mb-4">
-              <div className="flex justify-between text-sm mb-1.5"><span>Protein</span><span>{protein} g / ~100 g</span></div>
-              <div className="h-3 rounded-full overflow-hidden" style={{ background: "#EDF3F4" }}><div className="h-full rounded-full" style={{ width: `${Math.min(100, (protein / 100) * 100)}%`, background: "var(--green)" }} /></div>
-            </div>
-
-            <p className="text-xs" style={{ color: "var(--muted)" }}>These are general reference guides, not a personal target. Your real plan comes after a quick health check.</p>
-            <Link href="/start" className="block text-center mt-4 py-2.5 rounded-xl font-semibold text-white" style={{ background: "var(--teal)" }}>Start the program →</Link>
+          {/* Desktop summary (sidebar) */}
+          <div className="hidden lg:block bg-white rounded-2xl p-6 border h-fit sticky top-4" style={{ borderColor: "var(--hair)" }}>
+            <SummaryInner />
           </div>
         </div>
 
         <div className="mt-10"><Link href="/tools" className="font-semibold" style={{ color: "var(--teal)" }}>← Back to tools</Link></div>
       </section>
+
+      {/* Mobile sticky summary bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t px-5 py-3" style={{ borderColor: "var(--hair)", boxShadow: "0 -4px 20px rgba(11,58,74,0.08)" }}>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "var(--teal)" }}>Day total</div>
+            <div className="font-serif-display font-bold" style={{ color: "var(--ink)", fontSize: "1.4rem" }}>{lo === hi ? lo : `${lo}–${hi}`} <span className="text-xs font-sans font-normal" style={{ color: "var(--muted)" }}>kcal</span></div>
+          </div>
+          <div className="flex-1 mx-4">
+            {bmr && ref ? (
+              <div className="h-2.5 rounded-full overflow-hidden" style={{ background: "#EDF3F4" }}>
+                <div className="h-full rounded-full" style={{ width: `${refPct}%`, background: mid > ref ? "var(--amber)" : "var(--teal)", transition: "width 0.4s ease" }} />
+              </div>
+            ) : (
+              <div className="text-xs text-center" style={{ color: "var(--muted)" }}>{protein}g protein</div>
+            )}
+          </div>
+          <Link href="/start" className="px-4 py-2.5 rounded-xl font-semibold text-white text-sm whitespace-nowrap" style={{ background: "var(--teal)" }}>Start →</Link>
+        </div>
+      </div>
     </main>
   );
 }
