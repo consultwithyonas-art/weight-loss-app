@@ -1,19 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-
-type Food = {
-  name: string;
-  emoji: string;
-  cat: string;
-  portion: string;
-  lo: number;
-  hi: number;
-  p: number;
-  c: number;
-  f: number;
-};
+import { useState, useEffect } from "react";
+import { Food, getFavorites, saveFavorites, isFav, getCustomFoods, saveCustomFoods } from "../favorites";
 
 const FOODS: Food[] = [
   { name: "Chapati", emoji: "🫓", cat: "staple", portion: "1 piece", lo: 240, hi: 300, p: 6, c: 40, f: 9 },
@@ -44,25 +33,48 @@ const FOODS: Food[] = [
   { name: "Water", emoji: "💧", cat: "drink", portion: "1 glass", lo: 0, hi: 0, p: 0, c: 0, f: 0 },
 ];
 
-const CATS = ["all", "staple", "protein", "veg", "fruit", "snack", "drink"];
-const CAT_LABELS: Record<string, string> = {
-  all: "All", staple: "Staples", protein: "Proteins", veg: "Veg",
-  fruit: "Fruit", snack: "Snacks", drink: "Drinks",
-};
-const CAT_TILE: Record<string, string> = {
-  staple: "#E9F0E9", protein: "#E4EEF0", veg: "#E8F3EC",
-  fruit: "#FBF1E0", snack: "#F3ECF5", drink: "#EAF2F3",
-};
+const CATS = ["all", "staple", "protein", "veg", "fruit", "snack", "drink", "custom"];
+const CAT_LABELS: Record<string, string> = { all: "All", staple: "Staples", protein: "Proteins", veg: "Veg", fruit: "Fruit", snack: "Snacks", drink: "Drinks", custom: "My foods" };
+const CAT_TILE: Record<string, string> = { staple: "#E9F0E9", protein: "#E4EEF0", veg: "#E8F3EC", fruit: "#FBF1E0", snack: "#F3ECF5", drink: "#EAF2F3", custom: "#EDE9F3" };
+
+const claudeLink = "https://claude.ai/new?q=" + encodeURIComponent("Estimate the calories and protein for this food and portion: ");
 
 export default function ToolsPage() {
   const [cat, setCat] = useState("all");
   const [query, setQuery] = useState("");
-  const [favs, setFavs] = useState<string[]>([]);
+  const [favs, setFavs] = useState<Food[]>([]);
+  const [custom, setCustom] = useState<Food[]>([]);
 
-  const toggleFav = (name: string) =>
-    setFavs((f) => (f.includes(name) ? f.filter((x) => x !== name) : [...f, name]));
+  const [showAdd, setShowAdd] = useState(false);
+  const [cName, setCName] = useState("");
+  const [cPortion, setCPortion] = useState("");
+  const [cKcal, setCKcal] = useState("");
+  const [cProt, setCProt] = useState("");
 
-  const shown = FOODS.filter((food) => {
+  useEffect(() => { setFavs(getFavorites()); setCustom(getCustomFoods()); }, []);
+
+  const toggleFav = (food: Food) => {
+    setFavs((current) => {
+      const next = isFav(current, food.name) ? current.filter((x) => x.name !== food.name) : [...current, food];
+      saveFavorites(next);
+      return next;
+    });
+  };
+
+  const addCustom = () => {
+    const kcal = parseFloat(cKcal);
+    if (!cName.trim() || !(kcal > 0)) return;
+    const food: Food = {
+      name: cName.trim(), emoji: "🍽️", cat: "custom", portion: cPortion.trim() || "1 serving",
+      lo: Math.round(kcal * 0.9), hi: Math.round(kcal * 1.1), p: parseFloat(cProt) || 0, c: 0, f: 0,
+    };
+    const next = [food, ...custom];
+    setCustom(next); saveCustomFoods(next);
+    setCName(""); setCPortion(""); setCKcal(""); setCProt(""); setShowAdd(false);
+  };
+
+  const ALL = [...custom, ...FOODS];
+  const shown = ALL.filter((food) => {
     if (cat !== "all" && food.cat !== cat) return false;
     if (query && !food.name.toLowerCase().includes(query.toLowerCase())) return false;
     return true;
@@ -70,7 +82,6 @@ export default function ToolsPage() {
 
   return (
     <main className="min-h-screen">
-      {/* Header */}
       <header style={{ background: "var(--ink)" }} className="px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
           <Link href="/" className="flex items-center gap-3">
@@ -88,63 +99,40 @@ export default function ToolsPage() {
         </div>
       </header>
 
-      {/* Body */}
       <section className="max-w-5xl mx-auto px-6 py-12">
         <div className="text-sm font-bold tracking-widest uppercase mb-3" style={{ color: "var(--teal)" }}>Browse · no sign-up</div>
         <h1 className="font-serif-display font-bold mb-3" style={{ color: "var(--ink)", fontSize: "clamp(1.8rem, 4vw, 2.6rem)" }}>What&apos;s in the food you love?</h1>
-        <p className="text-lg max-w-2xl mb-8" style={{ color: "var(--muted)" }}>
-          Tap to favourite. Numbers are friendly estimates shown as a range — real life varies with portion and how it&apos;s cooked.
+        <p className="text-lg max-w-2xl mb-3" style={{ color: "var(--muted)" }}>
+          Tap the heart to add a food to your meals. Can&apos;t find something? Add it below.
         </p>
+        {favs.length > 0 && (
+          <p className="mb-6 text-sm font-semibold" style={{ color: "var(--green)" }}>♥ {favs.length} food{favs.length > 1 ? "s" : ""} saved — find them in the Meals tab.</p>
+        )}
 
-        {/* Search */}
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search foods… (try 'chapati' or 'beans')"
-          className="w-full mb-4 px-4 py-3 rounded-xl border bg-white"
-          style={{ borderColor: "var(--hair)" }}
-        />
+        <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search foods…" className="w-full mb-4 px-4 py-3 rounded-xl border bg-white" style={{ borderColor: "var(--hair)" }} />
 
-        {/* Category filters */}
         <div className="flex flex-wrap gap-2 mb-8">
           {CATS.map((c) => {
             const active = cat === c;
             return (
-              <button
-                key={c}
-                onClick={() => setCat(c)}
-                className="px-4 py-2 rounded-full text-sm font-medium border"
-                style={{
-                  background: active ? "var(--ink)" : "white",
-                  color: active ? "white" : "var(--text)",
-                  borderColor: active ? "var(--ink)" : "var(--hair)",
-                }}
-              >
+              <button key={c} onClick={() => setCat(c)} className="px-4 py-2 rounded-full text-sm font-medium border"
+                style={{ background: active ? "var(--ink)" : "white", color: active ? "white" : "var(--text)", borderColor: active ? "var(--ink)" : "var(--hair)" }}>
                 {CAT_LABELS[c]}
               </button>
             );
           })}
         </div>
 
-        {/* Food grid */}
         <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
           {shown.map((food) => {
-            const isFav = favs.includes(food.name);
+            const fav = isFav(favs, food.name);
             return (
-              <div key={food.name} className="bg-white rounded-2xl p-4 border relative" style={{ borderColor: "var(--hair)" }}>
-                <button
-                  onClick={() => toggleFav(food.name)}
-                  className="absolute top-3 right-3 text-xl leading-none"
-                  style={{ color: isFav ? "var(--coral)" : "var(--hair)" }}
-                  aria-label="Favourite"
-                >
-                  ♥
-                </button>
+              <div key={food.name} className="bg-white rounded-2xl p-4 border relative" style={{ borderColor: fav ? "var(--green)" : "var(--hair)" }}>
+                <button onClick={() => toggleFav(food)} className="absolute top-3 right-3 text-xl leading-none" style={{ color: fav ? "var(--coral)" : "var(--hair)" }} aria-label="Favourite">♥</button>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ background: CAT_TILE[food.cat] }}>{food.emoji}</div>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ background: CAT_TILE[food.cat] || "#EDE9F3" }}>{food.emoji}</div>
                   <div>
-                    <div className="font-bold" style={{ color: "var(--ink)" }}>{food.name}</div>
+                    <div className="font-bold" style={{ color: "var(--ink)" }}>{food.name}{food.cat === "custom" && <span className="ml-1 text-xs font-normal" style={{ color: "var(--muted)" }}>(yours)</span>}</div>
                     <div className="text-sm" style={{ color: "var(--muted)" }}>{food.portion}</div>
                   </div>
                 </div>
@@ -159,17 +147,34 @@ export default function ToolsPage() {
               </div>
             );
           })}
+
+          {/* Add-a-food card */}
+          <div className="rounded-2xl p-4 border-2 border-dashed flex flex-col" style={{ borderColor: "var(--mint)", background: "#F4FAF9" }}>
+            {!showAdd ? (
+              <button onClick={() => setShowAdd(true)} className="flex-1 flex flex-col items-center justify-center text-center" style={{ color: "var(--teal)", minHeight: "120px" }}>
+                <span className="text-3xl leading-none mb-2">+</span>
+                <span className="font-bold">Add a food</span>
+                <span className="text-xs mt-1" style={{ color: "var(--muted)" }}>not in the list</span>
+              </button>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <input value={cName} onChange={(e) => setCName(e.target.value)} placeholder="Food name" className="px-3 py-2 rounded-lg border text-sm" style={{ borderColor: "var(--hair)" }} />
+                <input value={cPortion} onChange={(e) => setCPortion(e.target.value)} placeholder="Portion (e.g. 1 bowl)" className="px-3 py-2 rounded-lg border text-sm" style={{ borderColor: "var(--hair)" }} />
+                <div className="flex gap-2">
+                  <input value={cKcal} onChange={(e) => setCKcal(e.target.value)} type="number" placeholder="kcal" className="w-1/2 px-3 py-2 rounded-lg border text-sm" style={{ borderColor: "var(--hair)" }} />
+                  <input value={cProt} onChange={(e) => setCProt(e.target.value)} type="number" placeholder="protein g" className="w-1/2 px-3 py-2 rounded-lg border text-sm" style={{ borderColor: "var(--hair)" }} />
+                </div>
+                <a href={claudeLink} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold" style={{ color: "var(--teal)" }}>Don&apos;t know the calories? Ask Claude →</a>
+                <div className="flex gap-2 mt-1">
+                  <button onClick={addCustom} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--green)" }}>Add</button>
+                  <button onClick={() => setShowAdd(false)} className="px-3 py-2 text-sm" style={{ color: "var(--muted)" }}>Cancel</button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {shown.length === 0 && (
-          <p className="text-center py-10" style={{ color: "var(--muted)" }}>
-            No foods match — try a different search or category.
-          </p>
-        )}
-
-        <div className="mt-10">
-          <Link href="/" className="font-semibold" style={{ color: "var(--teal)" }}>← Back home</Link>
-        </div>
+        <div className="mt-10"><Link href="/" className="font-semibold" style={{ color: "var(--teal)" }}>← Back home</Link></div>
       </section>
     </main>
   );
