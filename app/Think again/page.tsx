@@ -31,10 +31,10 @@ const MYTHS: Myth[] = [
     grad: "linear-gradient(150deg, #5b6cb0, var(--ink))",
   },
   // coming soon — not yet built (kept here as a roadmap teaser)
-  {
-    href: "", emoji: "🚶", live: false,
+{
+    href: "/walk-it-off", emoji: "🚶", live: true,
     myth: "“I'll just burn it off later.”",
-    truth: "Coming soon — see how long you'd really have to walk off a soda.",
+    truth: "See how long you'd really have to walk off a soda. It's longer than you think.",
     grad: "linear-gradient(150deg, var(--amber), var(--ink))",
   },
   {
