@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Food, getFavorites, getCustomFoods, saveCustomFoods, getBmr, BmrSaved } from "../favorites";
+import {
+  Food, Line, DayPlan, getFavorites, getCustomFoods, saveCustomFoods,
+  getBmr, BmrSaved, todayKey, getDay, saveDay, getStreak, bumpStreak,
+} from "../favorites";
 
 const BASE: Food[] = [
   { name: "Chapati", emoji: "🫓", cat: "staple", portion: "1 piece", lo: 240, hi: 300, p: 6, c: 40, f: 9 },
@@ -23,44 +26,81 @@ const BASE: Food[] = [
 
 const SLOTS = ["Breakfast", "Lunch", "Dinner", "Snacks"] as const;
 type Slot = (typeof SLOTS)[number];
-type Line = { food: Food; qty: number };
 
 const claudeLink = "https://claude.ai/new?q=" + encodeURIComponent("Estimate the calories and protein for this food and portion: ");
+const emptyDay = (): Record<Slot, Line[]> => ({ Breakfast: [], Lunch: [], Dinner: [], Snacks: [] });
+
+function prettyDate(key: string) {
+  const d = new Date(key + "T00:00:00");
+  return d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+}
+
+// ---- the honest verdict ----
+type Verdict = { tone: "neutral" | "good" | "note"; title: string; body: string };
+function buildVerdict(itemCount: number, mid: number, protein: number, bmr: BmrSaved | null): Verdict | null {
+  if (itemCount === 0) return null;
+  const ref = bmr ? Math.round((bmr.lo + bmr.hi) / 2) : null;
+  const lowProtein = protein < 50;
+
+  // Calorie read (only when we have a BMR reference)
+  if (ref) {
+    if (mid > ref * 1.25) {
+      return { tone: "note", title: "This is a fuller day.", body: `Around ${mid} kcal sits above your resting burn of ~${ref}. With an active day that can still be fine — but it&apos;s worth knowing.${lowProtein ? " Protein is also a little low; a protein source at each meal helps." : ""}` };
+    }
+    if (mid < ref * 0.6) {
+      return { tone: "note", title: "This is on the light side.", body: `Around ${mid} kcal is well below your resting burn of ~${ref}. Eating too little backfires — energy and muscle suffer. Honestly, this looks like an under-eating day, not a win.` };
+    }
+    return { tone: "good", title: "This looks balanced and reasonable.", body: `Around ${mid} kcal sits sensibly against your resting burn of ~${ref}.${lowProtein ? " One thing: protein is a little low — adding a protein source at a meal would round it out." : " Protein is in a good place too."}` };
+  }
+
+  // No BMR yet — give a protein-based read + nudge to estimate
+  if (lowProtein) {
+    return { tone: "note", title: "A protein boost would help.", body: "Protein is on the low side today. Adding beans, eggs, chicken or fish to a meal makes a day more filling and protects muscle. For a fuller picture, estimate your resting burn." };
+  }
+  return { tone: "neutral", title: "A decent-looking day.", body: "Protein is in a reasonable place. To see this against your own resting burn, estimate your BMR — then this read gets sharper." };
+}
 
 export default function MealsPage() {
-  const [meal, setMeal] = useState<Record<Slot, Line[]>>({ Breakfast: [], Lunch: [], Dinner: [], Snacks: [] });
+  const [meal, setMeal] = useState<Record<Slot, Line[]>>(emptyDay());
   const [favs, setFavs] = useState<Food[]>([]);
   const [custom, setCustom] = useState<Food[]>([]);
   const [bmr, setBmr] = useState<BmrSaved | null>(null);
+  const [streak, setStreak] = useState(0);
+  const [loaded, setLoaded] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [cName, setCName] = useState("");
   const [cKcal, setCKcal] = useState("");
   const [cProt, setCProt] = useState("");
 
-  useEffect(() => { setFavs(getFavorites()); setCustom(getCustomFoods()); setBmr(getBmr()); }, []);
+  const today = todayKey();
+
+  useEffect(() => {
+    setFavs(getFavorites()); setCustom(getCustomFoods()); setBmr(getBmr()); setStreak(getStreak().count);
+    const saved = getDay(today);
+    if (saved) setMeal({ Breakfast: saved.Breakfast || [], Lunch: saved.Lunch || [], Dinner: saved.Dinner || [], Snacks: saved.Snacks || [] });
+    setLoaded(true);
+  }, [today]);
+
+  useEffect(() => { if (loaded) saveDay(today, meal as DayPlan); }, [meal, loaded, today]);
 
   const addFood = (slot: Slot, food: Food) => {
+    if (getStreak().lastDate !== today) { const s = bumpStreak(); setStreak(s.count); }
     setMeal((m) => {
       const lines = m[slot];
       const idx = lines.findIndex((l) => l.food.name === food.name);
-      if (idx >= 0) {
-        const copy = [...lines];
-        copy[idx] = { ...copy[idx], qty: copy[idx].qty + 1 };
-        return { ...m, [slot]: copy };
-      }
+      if (idx >= 0) { const copy = [...lines]; copy[idx] = { ...copy[idx], qty: copy[idx].qty + 1 }; return { ...m, [slot]: copy }; }
       return { ...m, [slot]: [...lines, { food, qty: 1 }] };
     });
   };
-  const changeQty = (slot: Slot, name: string, delta: number) => {
+  const changeQty = (slot: Slot, name: string, delta: number) =>
     setMeal((m) => ({ ...m, [slot]: m[slot].map((l) => (l.food.name === name ? { ...l, qty: l.qty + delta } : l)).filter((l) => l.qty > 0) }));
-  };
+  const clearDay = () => { if (confirm("Clear today&apos;s plan?")) setMeal(emptyDay()); };
 
   const addCustom = () => {
     const kcal = parseFloat(cKcal);
     if (!cName.trim() || !(kcal > 0)) return;
     const food: Food = { name: cName.trim(), emoji: "🍽️", cat: "custom", portion: "1 serving", lo: Math.round(kcal * 0.9), hi: Math.round(kcal * 1.1), p: parseFloat(cProt) || 0, c: 0, f: 0 };
-    const next = [food, ...custom];
-    setCustom(next); saveCustomFoods(next);
+    const next = [food, ...custom]; setCustom(next); saveCustomFoods(next);
     setCName(""); setCKcal(""); setCProt(""); setShowAdd(false);
   };
 
@@ -73,11 +113,27 @@ export default function MealsPage() {
   const hi = lines.reduce((s, l) => s + l.food.hi * l.qty, 0);
   const protein = lines.reduce((s, l) => s + l.food.p * l.qty, 0);
   const mid = Math.round((lo + hi) / 2);
-
   const ref = bmr ? Math.round((bmr.lo + bmr.hi) / 2) : null;
   const refPct = ref ? Math.min(100, (mid / ref) * 100) : 0;
   const leftLo = bmr ? Math.max(0, bmr.lo - mid) : 0;
   const leftHi = bmr ? Math.max(0, bmr.hi - mid) : 0;
+  const verdict = buildVerdict(lines.length, mid, protein, bmr);
+
+  const VERDICT_STYLE: Record<string, { bg: string; color: string; icon: string }> = {
+    good: { bg: "#E8F3EC", color: "#2f6b46", icon: "✓" },
+    note: { bg: "#FBF1E0", color: "#9a6a10", icon: "•" },
+    neutral: { bg: "#E4EEF0", color: "#0B3A4A", icon: "•" },
+  };
+
+  const VerdictCard = () =>
+    verdict ? (
+      <div className="rounded-2xl p-4 mb-4" style={{ background: VERDICT_STYLE[verdict.tone].bg }}>
+        <div className="font-bold mb-1 flex items-center gap-2" style={{ color: VERDICT_STYLE[verdict.tone].color }}>
+          <span>{VERDICT_STYLE[verdict.tone].icon}</span> {verdict.title}
+        </div>
+        <p className="text-sm" style={{ color: VERDICT_STYLE[verdict.tone].color }} dangerouslySetInnerHTML={{ __html: verdict.body }} />
+      </div>
+    ) : null;
 
   const SummaryInner = () => (
     <>
@@ -85,6 +141,7 @@ export default function MealsPage() {
       <div className="font-serif-display font-bold mb-4" style={{ color: "var(--ink)", fontSize: "1.8rem" }}>
         {lo === hi ? lo : `${lo}–${hi}`} <span className="text-sm font-sans font-normal" style={{ color: "var(--muted)" }}>kcal</span>
       </div>
+      <VerdictCard />
       {bmr && ref ? (
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-1.5"><span>vs your resting burn</span><span>{mid} / ~{ref}</span></div>
@@ -131,10 +188,13 @@ export default function MealsPage() {
       </header>
 
       <section className="max-w-5xl mx-auto px-5 py-8 sm:py-12 rise">
-        <div className="text-sm font-bold tracking-widest uppercase mb-3" style={{ color: "var(--teal)" }}>Play · educational</div>
-        <h1 className="font-serif-display font-bold mb-3" style={{ color: "var(--ink)", fontSize: "clamp(1.7rem, 6vw, 2.6rem)" }}>Build a day, see how it stacks up.</h1>
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+          <div className="text-sm font-bold tracking-widest uppercase" style={{ color: "var(--teal)" }}>My Day · {prettyDate(today)}</div>
+          {streak > 0 && <div className="text-sm font-semibold px-3 py-1 rounded-full" style={{ background: "#FBF1E0", color: "#9a6a10" }}>🔥 {streak}-day streak</div>}
+        </div>
+        <h1 className="font-serif-display font-bold mb-3" style={{ color: "var(--ink)", fontSize: "clamp(1.7rem, 6vw, 2.6rem)" }}>Plan today&apos;s meals.</h1>
         <p className="text-base sm:text-lg max-w-2xl mb-6" style={{ color: "var(--muted)" }}>
-          Tap a food to add it. Use − and + to set how much. Your saved foods appear first.
+          Tap a food to add it. Your plan saves automatically — come back anytime and it&apos;ll be here.
         </p>
 
         <div className="mb-6 p-4 rounded-2xl border bg-white" style={{ borderColor: "var(--hair)" }}>
@@ -142,6 +202,7 @@ export default function MealsPage() {
             <div className="flex flex-wrap gap-3 items-center">
               <button onClick={() => setShowAdd(true)} className="px-4 py-2.5 rounded-lg font-semibold text-white" style={{ background: "var(--teal)" }}>+ Add your own food</button>
               <a href={claudeLink} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold" style={{ color: "var(--teal)" }}>Don&apos;t know the calories? Ask Claude →</a>
+              {lines.length > 0 && <button onClick={clearDay} className="text-sm ml-auto" style={{ color: "var(--muted)" }}>Clear day</button>}
             </div>
           ) : (
             <div className="flex flex-wrap gap-3 items-end">
@@ -165,7 +226,7 @@ export default function MealsPage() {
                   <div className="flex flex-col gap-1.5 mb-3">
                     {meal[slot].length === 0 && <span className="text-sm" style={{ color: "var(--muted)" }}>tap foods below to add</span>}
                     {meal[slot].map((l) => (
-                      <div key={l.food.name} className="flex justify-between items-center text-sm rounded-lg px-3 py-2.5 rise" style={{ background: "var(--paper)" }}>
+                      <div key={l.food.name} className="flex justify-between items-center text-sm rounded-lg px-3 py-2.5" style={{ background: "var(--paper)" }}>
                         <span className="font-medium">{l.food.emoji} {l.food.name}</span>
                         <span className="flex items-center gap-2.5">
                           <span style={{ color: "var(--muted)" }}>{l.food.lo * l.qty}–{l.food.hi * l.qty}</span>
@@ -194,16 +255,17 @@ export default function MealsPage() {
             })}
           </div>
 
-          {/* Desktop summary (sidebar) */}
           <div className="hidden lg:block bg-white rounded-2xl p-6 border h-fit sticky top-4" style={{ borderColor: "var(--hair)" }}>
             <SummaryInner />
           </div>
         </div>
 
+        {/* Verdict on mobile (shows in the flow, above the sticky bar) */}
+        <div className="lg:hidden mt-6"><VerdictCard /></div>
+
         <div className="mt-10"><Link href="/tools" className="font-semibold" style={{ color: "var(--teal)" }}>← Back to tools</Link></div>
       </section>
 
-      {/* Mobile sticky summary bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t px-5 py-3" style={{ borderColor: "var(--hair)", boxShadow: "0 -4px 20px rgba(11,58,74,0.08)" }}>
         <div className="flex items-center justify-between">
           <div>
@@ -215,9 +277,7 @@ export default function MealsPage() {
               <div className="h-2.5 rounded-full overflow-hidden" style={{ background: "#EDF3F4" }}>
                 <div className="h-full rounded-full" style={{ width: `${refPct}%`, background: mid > ref ? "var(--amber)" : "var(--teal)", transition: "width 0.4s ease" }} />
               </div>
-            ) : (
-              <div className="text-xs text-center" style={{ color: "var(--muted)" }}>{protein}g protein</div>
-            )}
+            ) : (<div className="text-xs text-center" style={{ color: "var(--muted)" }}>{protein}g protein</div>)}
           </div>
           <Link href="/start" className="px-4 py-2.5 rounded-xl font-semibold text-white text-sm whitespace-nowrap" style={{ background: "var(--teal)" }}>Start →</Link>
         </div>
