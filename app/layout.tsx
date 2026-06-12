@@ -10,9 +10,19 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "The Weight-Loss System — Free, honest food tools",
+  title: "The Weight-Loss System — Honest food tools, by a doctor",
   description:
-    "Three simple, free tools built around the food you actually eat. Honest calorie ranges, your resting burn, and a daily meal planner. Built by a doctor.",
+    "Free, honest tools built around the food you actually eat. Check calories, estimate your resting burn, plan your day, and bust common weight myths. By a medical doctor — no fads, no ads.",
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
+  openGraph: {
+    title: "The Weight-Loss System — Honest food tools, by a doctor",
+    description:
+      "Free, honest tools built around the food you actually eat. No fads, no ads — by a medical doctor.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

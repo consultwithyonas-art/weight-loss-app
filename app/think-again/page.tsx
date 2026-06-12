@@ -118,8 +118,9 @@ export default function ThinkAgainPage() {
             </div>
           </Link>
           <nav className="ml-auto flex gap-1.5">
+            <Link href="/" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>Home</Link>
+            <Link href="/tools" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>Tools</Link>
             <Link href="/learn" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>Learn</Link>
-            <Link href="/tools" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>Food</Link>
           </nav>
         </div>
       </header>
