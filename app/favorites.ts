@@ -8,6 +8,7 @@ const CUSTOM_KEY = "wls_custom_foods";
 const BMR_KEY = "wls_bmr";
 const DAY_PREFIX = "wls_day_";
 const STREAK_KEY = "wls_streak";
+const INTENT_KEY = "wls_intent";
 
 function readList(key: string): Food[] {
   if (typeof window === "undefined") return [];
@@ -53,4 +54,22 @@ export function bumpStreak(): Streak {
   const next: Streak = { count: s.lastDate === yesterday ? s.count + 1 : 1, lastDate: today };
   writeRaw(STREAK_KEY, next);
   return next;
+}
+
+// ---- journey intent tracking ----
+export type Intent = { usedBmr: boolean; plannedDay: boolean; checkedFood: boolean };
+
+export function getIntent(): Intent {
+  return readRaw<Intent>(INTENT_KEY, { usedBmr: false, plannedDay: false, checkedFood: false });
+}
+export function markIntent(key: keyof Intent) {
+  if (typeof window === "undefined") return;
+  const cur = getIntent();
+  if (cur[key]) return;
+  writeRaw(INTENT_KEY, { ...cur, [key]: true });
+}
+// "Starter" = has both estimated their burn AND planned a day → high intent
+export function isStarter(): boolean {
+  const i = getIntent();
+  return i.usedBmr && i.plannedDay;
 }

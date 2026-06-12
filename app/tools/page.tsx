@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Food, getFavorites, saveFavorites, isFav, getCustomFoods, saveCustomFoods } from "../favorites";
+import { Food, getFavorites, saveFavorites, isFav, getCustomFoods, saveCustomFoods, markIntent } from "../favorites";
+import JourneyNudge from "../JourneyNudge";
 
 const FOODS: Food[] = [
   { name: "Chapati", emoji: "🫓", cat: "staple", portion: "1 piece", lo: 240, hi: 300, p: 6, c: 40, f: 9 },
@@ -51,7 +52,7 @@ export default function ToolsPage() {
   const [cKcal, setCKcal] = useState("");
   const [cProt, setCProt] = useState("");
 
-  useEffect(() => { setFavs(getFavorites()); setCustom(getCustomFoods()); }, []);
+  useEffect(() => { setFavs(getFavorites()); setCustom(getCustomFoods()); markIntent("checkedFood"); }, []);
 
   const toggleFav = (food: Food) => {
     setFavs((current) => {
@@ -84,7 +85,7 @@ export default function ToolsPage() {
     <main className="min-h-screen">
       <header style={{ background: "var(--ink)" }} className="px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
-          <Link href="/start" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-serif-display text-xl font-bold" style={{ background: "var(--teal)" }}>+</div>
             <div className="text-white">
               <div className="font-bold leading-tight">The Weight-Loss System</div>
@@ -95,6 +96,7 @@ export default function ToolsPage() {
             <Link href="/tools" className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white" style={{ background: "rgba(255,255,255,0.12)" }}>Food</Link>
             <Link href="/bmr" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>BMR</Link>
             <Link href="/meals" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>Meals</Link>
+            <Link href="/learn" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>Learn</Link>
           </nav>
         </div>
       </header>
@@ -148,7 +150,6 @@ export default function ToolsPage() {
             );
           })}
 
-          {/* Add-a-food card */}
           <div className="rounded-2xl p-4 border-2 border-dashed flex flex-col" style={{ borderColor: "var(--mint)", background: "#F4FAF9" }}>
             {!showAdd ? (
               <button onClick={() => setShowAdd(true)} className="flex-1 flex flex-col items-center justify-center text-center" style={{ color: "var(--teal)", minHeight: "120px" }}>
@@ -174,7 +175,9 @@ export default function ToolsPage() {
           </div>
         </div>
 
-        <div className="mt-10"><Link href="/start" className="font-semibold" style={{ color: "var(--teal)" }}>← Back home</Link></div>
+        <JourneyNudge nextHref="/meals" nextLabel="Plan a day with these foods" nextDesc="Add your favourites to a day and see how it all adds up." />
+
+        <div className="mt-8"><Link href="/" className="font-semibold" style={{ color: "var(--teal)" }}>← Back home</Link></div>
       </section>
     </main>
   );

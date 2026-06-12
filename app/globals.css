@@ -1,17 +1,28 @@
 @import "tailwindcss";
 
 :root {
+  /* core brand */
   --ink: #0B3A4A;
   --teal: #1B7F8C;
   --mint: #4FB3A8;
   --amber: #E8A33D;
   --coral: #E2674F;
   --green: #5A9E6F;
-  --paper: #F2F7F8;
+
+  /* refined surfaces — warmer, richer */
+  --paper: #F6F8F7;
+  --surface: #FFFFFF;
   --text: #16282F;
   --muted: #5E7178;
-  --hair: #DBE7E9;
+  --hair: #E3EBEC;
+
+  /* soft elevation */
+  --shadow-sm: 0 2px 10px rgba(11, 58, 74, 0.05);
+  --shadow-md: 0 8px 28px rgba(11, 58, 74, 0.09);
+  --shadow-lg: 0 18px 50px rgba(11, 58, 74, 0.13);
 }
+
+html { scroll-behavior: smooth; }
 
 body {
   background: var(--paper);
@@ -19,28 +30,43 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  letter-spacing: -0.005em;
 }
 
+/* premium display font for headings */
 .font-serif-display {
-  font-family: Georgia, "Times New Roman", serif;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display), Georgia, "Times New Roman", serif;
+  letter-spacing: -0.02em;
+  font-optical-sizing: auto;
 }
 
-/* --- smooth motion everywhere --- */
+/* --- refined motion --- */
 button, a, .card-hover {
-  transition: transform 0.15s ease, background 0.2s ease,
-    border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+    box-shadow 0.25s ease, opacity 0.2s ease;
 }
-button:active, a:active { transform: scale(0.96); }
-.card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(11, 58, 74, 0.10); }
+button:active, a:active { transform: scale(0.97); }
 
-@keyframes riseIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.rise { animation: riseIn 0.4s ease both; }
+.card-hover { box-shadow: var(--shadow-sm); }
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
 
-@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+/* entrances */
+@keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.rise { animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.rise-2 { animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both; }
+.rise-3 { animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.16s both; }
+
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.3); } 100% { transform: scale(1); } }
 .pop { animation: pop 0.3s ease; }
 
-html { scroll-behavior: smooth; }
+/* soft, slow floating for decorative art */
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.float { animation: float 7s ease-in-out infinite; }
+
 *:focus-visible { outline: 3px solid #B9E0DA; outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {

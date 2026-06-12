@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import {
   Food, Line, DayPlan, getFavorites, getCustomFoods, saveCustomFoods,
-  getBmr, BmrSaved, todayKey, getDay, saveDay, getStreak, bumpStreak,
+  getBmr, BmrSaved, todayKey, getDay, saveDay, getStreak, bumpStreak, markIntent,
 } from "../favorites";
+import JourneyNudge from "../JourneyNudge";
 
 const BASE: Food[] = [
   { name: "Chapati", emoji: "🫓", cat: "staple", portion: "1 piece", lo: 240, hi: 300, p: 6, c: 40, f: 9 },
@@ -35,14 +36,11 @@ function prettyDate(key: string) {
   return d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
 }
 
-// ---- the honest verdict ----
 type Verdict = { tone: "neutral" | "good" | "note"; title: string; body: string };
 function buildVerdict(itemCount: number, mid: number, protein: number, bmr: BmrSaved | null): Verdict | null {
   if (itemCount === 0) return null;
   const ref = bmr ? Math.round((bmr.lo + bmr.hi) / 2) : null;
   const lowProtein = protein < 50;
-
-  // Calorie read (only when we have a BMR reference)
   if (ref) {
     if (mid > ref * 1.25) {
       return { tone: "note", title: "This is a fuller day.", body: `Around ${mid} kcal sits above your resting burn of ~${ref}. With an active day that can still be fine — but it&apos;s worth knowing.${lowProtein ? " Protein is also a little low; a protein source at each meal helps." : ""}` };
@@ -52,8 +50,6 @@ function buildVerdict(itemCount: number, mid: number, protein: number, bmr: BmrS
     }
     return { tone: "good", title: "This looks balanced and reasonable.", body: `Around ${mid} kcal sits sensibly against your resting burn of ~${ref}.${lowProtein ? " One thing: protein is a little low — adding a protein source at a meal would round it out." : " Protein is in a good place too."}` };
   }
-
-  // No BMR yet — give a protein-based read + nudge to estimate
   if (lowProtein) {
     return { tone: "note", title: "A protein boost would help.", body: "Protein is on the low side today. Adding beans, eggs, chicken or fish to a meal makes a day more filling and protects muscle. For a fuller picture, estimate your resting burn." };
   }
@@ -85,6 +81,7 @@ export default function MealsPage() {
 
   const addFood = (slot: Slot, food: Food) => {
     if (getStreak().lastDate !== today) { const s = bumpStreak(); setStreak(s.count); }
+    markIntent("plannedDay");
     setMeal((m) => {
       const lines = m[slot];
       const idx = lines.findIndex((l) => l.food.name === food.name);
@@ -94,7 +91,7 @@ export default function MealsPage() {
   };
   const changeQty = (slot: Slot, name: string, delta: number) =>
     setMeal((m) => ({ ...m, [slot]: m[slot].map((l) => (l.food.name === name ? { ...l, qty: l.qty + delta } : l)).filter((l) => l.qty > 0) }));
-  const clearDay = () => { if (confirm("Clear today&apos;s plan?")) setMeal(emptyDay()); };
+  const clearDay = () => { if (confirm("Clear today's plan?")) setMeal(emptyDay()); };
 
   const addCustom = () => {
     const kcal = parseFloat(cKcal);
@@ -183,6 +180,7 @@ export default function MealsPage() {
             <Link href="/tools" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>Food</Link>
             <Link href="/bmr" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>BMR</Link>
             <Link href="/meals" className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white" style={{ background: "rgba(255,255,255,0.12)" }}>Meals</Link>
+            <Link href="/learn" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>Learn</Link>
           </nav>
         </div>
       </header>
@@ -260,10 +258,11 @@ export default function MealsPage() {
           </div>
         </div>
 
-        {/* Verdict on mobile (shows in the flow, above the sticky bar) */}
         <div className="lg:hidden mt-6"><VerdictCard /></div>
 
-        <div className="mt-10"><Link href="/tools" className="font-semibold" style={{ color: "var(--teal)" }}>← Back to tools</Link></div>
+        <JourneyNudge nextHref="/learn" nextLabel="Learn the honest truth about food" nextDesc="Short, myth-busting reads to understand what you just planned." />
+
+        <div className="mt-8"><Link href="/tools" className="font-semibold" style={{ color: "var(--teal)" }}>← Back to tools</Link></div>
       </section>
 
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t px-5 py-3" style={{ borderColor: "var(--hair)", boxShadow: "0 -4px 20px rgba(11,58,74,0.08)" }}>
