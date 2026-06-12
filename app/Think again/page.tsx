@@ -5,10 +5,10 @@ import Link from "next/link";
 type Myth = {
   href: string;
   emoji: string;
-  myth: string;        // the common belief
-  truth: string;       // the one-line honest correction
+  myth: string;
+  truth: string;
   grad: string;
-  live: boolean;       // is the interactive built yet?
+  live: boolean;
 };
 
 const MYTHS: Myth[] = [
@@ -30,18 +30,23 @@ const MYTHS: Myth[] = [
     truth: "Hormones, sleep, the gut and disease move the dials — without breaking the rule.",
     grad: "linear-gradient(150deg, #5b6cb0, var(--ink))",
   },
-  // coming soon — not yet built (kept here as a roadmap teaser)
-{
+  {
     href: "/walk-it-off", emoji: "🚶", live: true,
     myth: "“I'll just burn it off later.”",
     truth: "See how long you'd really have to walk off a soda. It's longer than you think.",
     grad: "linear-gradient(150deg, var(--amber), var(--ink))",
   },
   {
+    href: "/sugar", emoji: "🥄", live: true,
+    myth: "“It's just a drink.”",
+    truth: "Watch the teaspoons of sugar pile up — that ‘healthy’ juice may shock you.",
+    grad: "linear-gradient(150deg, var(--coral), var(--ink))",
+  },
+  {
     href: "", emoji: "🎯", live: false,
     myth: "“Crunches burn belly fat.”",
     truth: "Coming soon — why you can't choose where fat leaves.",
-    grad: "linear-gradient(150deg, var(--coral), var(--ink))",
+    grad: "linear-gradient(150deg, #b0685b, var(--ink))",
   },
 ];
 
@@ -103,7 +108,6 @@ export default function ThinkAgainPage() {
           )}
         </div>
 
-        {/* prime the program */}
         <div className="mt-10 rounded-3xl p-6 sm:p-8 text-white" style={{ background: "linear-gradient(150deg, var(--teal), var(--ink))" }}>
           <div className="font-serif-display font-bold mb-1" style={{ fontSize: "1.4rem" }}>The real lesson behind every myth</div>
           <p className="mb-4" style={{ color: "#CFE6E8" }}>Your body is more complex than the advice you&apos;ve been given. That&apos;s exactly why a plan made for <i>you</i> — screened by a doctor — works where generic rules fail.</p>
