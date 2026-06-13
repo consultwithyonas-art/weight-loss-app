@@ -28,7 +28,7 @@ export default function BmrPage() {
     const lo = Math.round((base * 0.95) / 10) * 10;
     const hi = Math.round((base * 1.05) / 10) * 10;
     setResult({ lo, hi });
-    saveBmr({ lo, hi, weight: w });
+    saveBmr({ lo, hi });
     markIntent("usedBmr");
   };
 
