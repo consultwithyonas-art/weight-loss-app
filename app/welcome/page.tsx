@@ -11,7 +11,7 @@ const GUIDES: Record<Journey, {
   flag?: string;
 }> = {
   lose: {
-    title: "Losing weight",
+    title: "losing weight",
     intro: "You're in the right place — this is what the whole toolkit is built around. Here's a good order to explore.",
     accent: "var(--teal)",
     tools: [
@@ -22,26 +22,26 @@ const GUIDES: Record<Journey, {
     ],
   },
   gain: {
-    title: "Gaining weight",
+    title: "gaining weight",
     intro: "Just as real, and often overlooked. The same tools help — you're just aiming for a gentle surplus instead of a deficit. Focus on enough energy and protein, from foods you enjoy.",
     accent: "var(--green)",
     tools: [
       { href: "/bmr", label: "Find your resting burn", why: "Your starting point — you'll want to eat a bit above this." },
       { href: "/tools", label: "Check your food", why: "Spot calorie- and protein-dense foods to add (groundnuts, avocado, beans, eggs)." },
       { href: "/meals", label: "Plan a fuller day", why: "Build meals that comfortably clear your resting burn." },
-      { href: "/energy", label: "How the body works", why: "See how a surplus builds — and what can quietly block gaining." },
+      { href: "/body-bank", label: "Your body bank", why: "See how a surplus builds the reserve — and what can quietly block gaining." },
     ],
     flag: "One honest note: struggling to gain weight, or losing it without trying, can sometimes signal a health issue (thyroid, gut absorption, and others). If that's you, please see a doctor first — gaining well starts with ruling that out.",
   },
   maintain: {
-    title: "Keeping your weight",
+    title: "maintaining your weight",
     intro: "Maintenance is a real goal — and a skill. The aim is balance: energy in roughly matching energy out, with enough protein to protect muscle. The tools help you find and hold that line.",
     accent: "var(--amber)",
     tools: [
       { href: "/bmr", label: "Find your resting burn", why: "Your rough balance point to aim around." },
       { href: "/meals", label: "Plan a balanced day", why: "See your day sit near (not far below) your burn." },
       { href: "/tools", label: "Know your foods", why: "Stay aware of the foods and drinks that quietly add up." },
-      { href: "/think-again", label: "Think Again", why: "Understand your body so balance feels easy, not anxious." },
+      { href: "/body-bank", label: "Your body bank", why: "See what 'balance' really looks like over time." },
     ],
   },
 };
@@ -80,7 +80,7 @@ export default function WelcomePage() {
               {([
                 ["lose", "📉", "I want to lose weight", "var(--teal)"],
                 ["gain", "📈", "I want to gain weight", "var(--green)"],
-                ["maintain", "⚖️", "I want to keep my weight", "var(--amber)"],
+                ["maintain", "⚖️", "I want to maintain", "var(--amber)"],
               ] as const).map(([key, emoji, label, color]) => (
                 <button key={key} onClick={() => setJourney(key)} className="card-hover rounded-3xl p-6 bg-white border text-center" style={{ borderColor: "var(--hair)" }}>
                   <div className="text-4xl mb-3">{emoji}</div>
@@ -89,10 +89,11 @@ export default function WelcomePage() {
               ))}
             </div>
 
+            {/* Body Bank — understand the basics, any journey */}
             <Link href="/body-bank" className="card-hover block rounded-3xl p-6 mt-8 text-white" style={{ background: "linear-gradient(150deg, #5b8fb0, var(--ink))" }}>
               <div className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: "rgba(255,255,255,0.8)" }}>🏦 First, understand the basics</div>
               <div className="font-serif-display font-bold text-lg mb-1">Your body keeps a savings account</div>
-              <div className="text-sm" style={{ color: "rgba(255,255,255,0.9)" }}>See how food, movement, and your fat stores work — explained as money. Works for any journey.</div>
+              <div className="text-sm" style={{ color: "rgba(255,255,255,0.9)" }}>See how food, movement, and your fat reserve work — explained as money. Works for any journey.</div>
             </Link>
 
             <div className="mt-6 text-center">
@@ -104,7 +105,7 @@ export default function WelcomePage() {
             <button onClick={() => setJourney(null)} className="text-sm mb-6" style={{ color: "var(--muted)" }}>← choose again</button>
             <div className="text-sm font-bold tracking-widest uppercase mb-2" style={{ color: g!.accent }}>Your journey · {g!.title}</div>
             <h1 className="font-serif-display font-bold mb-4" style={{ color: "var(--ink)", fontSize: "clamp(1.8rem, 5vw, 2.6rem)", lineHeight: 1.1 }}>
-              Here&apos;s how to use these tools for {g!.title.toLowerCase()}.
+              Here&apos;s how to use these tools for {g!.title}.
             </h1>
             <p className="text-lg mb-8" style={{ color: "var(--muted)" }}>{g!.intro}</p>
 
