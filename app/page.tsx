@@ -1,5 +1,5 @@
 import Link from "next/link";
-
+import MyJourney from "./MyJourney";
 const CARDS = [
   {
     href: "/tools",
@@ -83,6 +83,7 @@ export default function Home() {
           Get honest answers about your food — no fads, no fear, no judgment. Start by telling us where you&apos;re headed.
         </p>
       </section>
+      <MyJourney />
 
       {/* START HERE — the journey on-ramp */}
       <section className="max-w-5xl mx-auto px-5 pb-6 rise">
