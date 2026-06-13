@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Food, getFavorites, saveFavorites, isFav, getCustomFoods, saveCustomFoods, markIntent } from "../favorites";
 import JourneyNudge from "../JourneyNudge";
-import Nav from "../Nav";
+
 const FOODS: Food[] = [
   { name: "Chapati", emoji: "🫓", cat: "staple", portion: "1 piece", lo: 240, hi: 300, p: 6, c: 40, f: 9 },
   { name: "Ugali", emoji: "🍚", cat: "staple", portion: "1 cup", lo: 180, hi: 220, p: 4, c: 42, f: 1 },
@@ -83,7 +83,24 @@ export default function ToolsPage() {
 
   return (
     <main className="min-h-screen">
-      <Nav tagline="Open tools" />
+      <header style={{ background: "var(--ink)" }} className="px-6 py-4">
+        <div className="max-w-5xl mx-auto flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-serif-display text-xl font-bold" style={{ background: "var(--teal)" }}>+</div>
+            <div className="text-white">
+              <div className="font-bold leading-tight">The Weight-Loss System</div>
+              <div className="text-xs tracking-widest uppercase" style={{ color: "var(--mint)" }}>Open tools · free to explore</div>
+            </div>
+          </Link>
+          <nav className="ml-auto flex gap-2">
+            <Link href="/tools" className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white" style={{ background: "rgba(255,255,255,0.12)" }}>Food</Link>
+            <Link href="/bmr" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>BMR</Link>
+            <Link href="/meals" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>Meals</Link>
+            <Link href="/learn" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>Learn</Link>
+          </nav>
+        </div>
+      </header>
+
       <section className="max-w-5xl mx-auto px-6 py-12">
         <div className="text-sm font-bold tracking-widest uppercase mb-3" style={{ color: "var(--teal)" }}>Browse · no sign-up</div>
         <h1 className="font-serif-display font-bold mb-3" style={{ color: "var(--ink)", fontSize: "clamp(1.8rem, 4vw, 2.6rem)" }}>What&apos;s in the food you love?</h1>

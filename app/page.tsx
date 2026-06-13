@@ -80,8 +80,29 @@ export default function Home() {
           Wondering if you&apos;re<br />eating okay?
         </h1>
         <p className="text-lg sm:text-xl max-w-2xl" style={{ color: "var(--muted)" }}>
-          Get honest answers about your food — no fads, no fear, no judgment. Start by testing what you think you know.
+          Get honest answers about your food — no fads, no fear, no judgment. Start by telling us where you&apos;re headed.
         </p>
+      </section>
+
+      {/* START HERE — the journey on-ramp */}
+      <section className="max-w-5xl mx-auto px-5 pb-6 rise">
+        <Link href="/welcome" className="card-hover block rounded-3xl p-6 sm:p-7 bg-white border-2" style={{ borderColor: "var(--teal)" }}>
+          <div className="flex items-center gap-5">
+            <div className="text-4xl shrink-0">🧭</div>
+            <div className="flex-1">
+              <div className="text-xs font-bold tracking-widest uppercase mb-1" style={{ color: "var(--teal)" }}>Start here</div>
+              <div className="font-serif-display font-bold text-xl mb-1" style={{ color: "var(--ink)", lineHeight: 1.2 }}>
+                Tell us about your journey
+              </div>
+              <div className="text-sm" style={{ color: "var(--muted)" }}>
+                Losing, gaining, or keeping your weight? We&apos;ll point you to the right tools — and show you how your body really works.
+              </div>
+            </div>
+            <div className="font-bold hidden sm:flex items-center gap-1" style={{ color: "var(--teal)" }}>
+              Begin <span aria-hidden="true">→</span>
+            </div>
+          </div>
+        </Link>
       </section>
 
       {/* THINK AGAIN band */}
@@ -96,7 +117,7 @@ export default function Home() {
               Test what you think you know about weight.
             </h2>
             <p className="text-base sm:text-lg max-w-xl mb-6" style={{ color: "#DCEFEC" }}>
-              Six playful, eye-opening myth-busters from a doctor. Is a belly really just fat? Can you burn off that soda? Tap, play, and find out.
+              Playful, eye-opening myth-busters from a doctor. Is a belly really just fat? Can you burn off that soda? Tap, play, and find out.
             </p>
             <span className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold" style={{ background: "white", color: "var(--ink)" }}>
               Start playing →

@@ -62,10 +62,6 @@ const FILTERS = [
   { v: "plate", label: "Balanced plate" },
 ];
 
-const PLAY = [
-  { href: "/think-again", emoji: "🤔", title: "Think Again", desc: "Pick a belief about weight and play with it — most of what we ‘know’ is half-true.", grad: "linear-gradient(150deg, var(--teal), var(--ink))" },
-];
-
 export default function LearnPage() {
   const [filter, setFilter] = useState("all");
   const shown = CARDS.filter((c) => filter === "all" || c.kind === filter);
@@ -85,7 +81,7 @@ export default function LearnPage() {
             <Link href="/tools" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>Food</Link>
             <Link href="/bmr" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>BMR</Link>
             <Link href="/meals" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>Meals</Link>
-            <Link href="/learn" className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white" style={{ background: "rgba(255,255,255,0.12)" }}>Learn</Link>
+            <Link href="/think-again" className="px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ color: "#9FC4C8" }}>Think Again</Link>
           </nav>
         </div>
       </header>
@@ -99,20 +95,13 @@ export default function LearnPage() {
           Short, honest reads — no fads, no fear. Just clear facts to help you understand your body and what you put into it.
         </p>
 
-        {/* Play & Learn — featured interactives */}
-        <div className="text-sm font-bold tracking-widest uppercase mb-3" style={{ color: "var(--teal)" }}>Play &amp; learn · interactive</div>
-        <div className="grid gap-4 sm:grid-cols-3 mb-12">
-          {PLAY.map((p) => (
-            <Link key={p.href} href={p.href} className="card-hover block rounded-3xl p-5 text-white" style={{ background: p.grad }}>
-              <div className="text-3xl mb-3">{p.emoji}</div>
-              <div className="font-serif-display font-bold text-lg mb-1" style={{ lineHeight: 1.2 }}>{p.title}</div>
-              <div className="text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>{p.desc}</div>
-              <div className="mt-3 text-sm font-semibold">Try it →</div>
-            </Link>
-          ))}
-        </div>
+        {/* Play & learn — Think Again hub */}
+        <Link href="/think-again" className="card-hover block rounded-3xl p-6 mb-10 text-white" style={{ background: "linear-gradient(150deg, var(--teal), var(--ink))" }}>
+          <div className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: "#CFE6E8" }}>🤔 Play &amp; learn · interactive</div>
+          <div className="font-serif-display font-bold text-xl mb-1">Think Again — test what you know</div>
+          <div className="text-sm" style={{ color: "#CFE6E8" }}>Pick a belief about weight and play with it — most of what we ‘know’ is half-true.</div>
+        </Link>
 
-        {/* Reading cards */}
         <div className="flex flex-wrap gap-2 mb-8">
           {FILTERS.map((f) => {
             const active = filter === f.v;
@@ -142,6 +131,13 @@ export default function LearnPage() {
           <div className="font-serif-display font-bold mb-1" style={{ fontSize: "1.4rem" }}>Want guidance made for you?</div>
           <p className="mb-4" style={{ color: "#CFE6E8" }}>General knowledge is a great start. A plan built around your body, your health and your food is the next step.</p>
           <Link href="/start" className="inline-block px-6 py-3 rounded-xl font-semibold" style={{ background: "white", color: "var(--ink)" }}>Explore the program →</Link>
+        </div>
+
+        {/* gentle, soft-gated reflective read */}
+        <div className="mt-10 text-center">
+          <Link href="/weight-and-protection" className="text-sm inline-block pb-0.5" style={{ color: "var(--muted)", borderBottom: "1px solid var(--hair)" }}>
+            A gentle read: when weight has been a kind of protection →
+          </Link>
         </div>
 
         <div className="mt-8"><Link href="/" className="font-semibold" style={{ color: "var(--teal)" }}>← Back home</Link></div>

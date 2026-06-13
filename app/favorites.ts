@@ -73,3 +73,22 @@ export function isStarter(): boolean {
   const i = getIntent();
   return i.usedBmr && i.plannedDay;
 }
+// ---- cloud sync (Supabase) for logged-in users ----
+import { supabase } from "./supabaseClient";
+
+// load this user's favourite food names from the cloud
+export async function cloudGetFavorites(): Promise<string[]> {
+  const { data, error } = await supabase.from("favorites").select("food_name");
+  if (error || !data) return [];
+  return data.map((r) => r.food_name);
+}
+
+// add one favourite to the cloud (ignores duplicates silently)
+export async function cloudAddFavorite(foodName: string, userId: string) {
+  await supabase.from("favorites").insert({ food_name: foodName, user_id: userId });
+}
+
+// remove one favourite from the cloud
+export async function cloudRemoveFavorite(foodName: string, userId: string) {
+  await supabase.from("favorites").delete().eq("food_name", foodName).eq("user_id", userId);
+}

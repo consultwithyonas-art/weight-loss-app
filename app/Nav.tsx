@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import AuthStatus from "./AuthStatus";
 
 const LINKS = [
   { href: "/tools", label: "Food" },
@@ -34,6 +35,7 @@ export default function Nav({ tagline = "Open tools" }: { tagline?: string }) {
             );
           })}
         </nav>
+        <AuthStatus />
       </div>
     </header>
   );

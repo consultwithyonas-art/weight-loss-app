@@ -65,6 +65,12 @@ const SECTIONS: Section[] = [
         grad: "linear-gradient(150deg, var(--teal), var(--ink))",
       },
       {
+        href: "/glp1", emoji: "💉", live: true,
+        myth: "“Ozempic is a magic shortcut.”",
+        truth: "See how GLP-1 meds actually work — and why habits still decide the outcome.",
+        grad: "linear-gradient(150deg, #5b8fb0, var(--ink))",
+      },
+      {
         href: "/spot-reduction", emoji: "🎯", live: true,
         myth: "“Crunches burn belly fat.”",
         truth: "Do the crunches — watch the belly shrink, and everywhere else too.",
