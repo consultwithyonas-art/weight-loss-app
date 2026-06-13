@@ -47,13 +47,13 @@ export default function WeightProtectionPage() {
         <div className="mt-12 rounded-3xl p-7" style={{ background: "#fff", border: "1.5px solid var(--hair)" }}>
           <div className="font-serif-display font-bold text-xl mb-2" style={{ color: "var(--ink)" }}>If this opened something for you</div>
           <p className="mb-5" style={{ color: "var(--muted)" }}>
-            You deserve real support — from a person, not a website. Talking to someone who understands trauma can change everything. Please consider reaching out:
+            You deserve real support. Talking to someone who understands trauma can change everything. Please consider reaching out:
           </p>
 
           <div className="space-y-3 mb-5">
             <div className="rounded-xl p-4" style={{ background: "var(--paper)" }}>
               <div className="font-semibold" style={{ color: "var(--ink)" }}>A doctor or mental-health professional</div>
-              <div className="text-sm" style={{ color: "var(--muted)" }}>Your nearest health centre or hospital can connect you with mental-health support, or refer you to someone who works with trauma. You don&apos;t need to explain everything — just that you&apos;d like to talk to someone.</div>
+              <div className="text-sm" style={{ color: "var(--muted)" }}>Your nearest health centre or hospital can connect you with mental-health support, or refer you to someone who works with trauma.</div>
             </div>
             <div className="rounded-xl p-4" style={{ background: "var(--paper)" }}>
               <div className="font-semibold" style={{ color: "var(--ink)" }}>Someone you trust</div>
