@@ -191,9 +191,12 @@ export default function MealsPage() {
           {streak > 0 && <div className="text-sm font-semibold px-3 py-1 rounded-full" style={{ background: "#FBF1E0", color: "#9a6a10" }}>🔥 {streak}-day streak</div>}
         </div>
         <h1 className="font-serif-display font-bold mb-3" style={{ color: "var(--ink)", fontSize: "clamp(1.7rem, 6vw, 2.6rem)" }}>Plan today&apos;s meals.</h1>
-        <p className="text-base sm:text-lg max-w-2xl mb-6" style={{ color: "var(--muted)" }}>
+        <p className="text-base sm:text-lg max-w-2xl mb-4" style={{ color: "var(--muted)" }}>
           Tap a food to add it. Your plan saves automatically — come back anytime and it&apos;ll be here.
         </p>
+        <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-6 text-xs" style={{ background: "#E8F3EC", color: "#2f6b46" }}>
+          🔒 Your plan stays on your device — we don&apos;t store or see it unless you choose to message us.
+        </div>
 
         <div className="mb-6 p-4 rounded-2xl border bg-white" style={{ borderColor: "var(--hair)" }}>
           {!showAdd ? (
@@ -258,7 +261,9 @@ export default function MealsPage() {
           </div>
         </div>
 
-        <div className="lg:hidden mt-6"><VerdictCard /></div>
+        <div className="lg:hidden mt-6 bg-white rounded-2xl p-6 border" style={{ borderColor: "var(--hair)" }}>
+          <SummaryInner />
+        </div>
 
         <JourneyNudge nextHref="/learn" nextLabel="Learn the honest truth about food" nextDesc="Short, myth-busting reads to understand what you just planned." />
 
@@ -268,7 +273,7 @@ export default function MealsPage() {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t px-5 py-3" style={{ borderColor: "var(--hair)", boxShadow: "0 -4px 20px rgba(11,58,74,0.08)" }}>
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "var(--teal)" }}>Day total</div>
+            <div className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "var(--teal)" }}>So far today</div>
             <div className="font-serif-display font-bold" style={{ color: "var(--ink)", fontSize: "1.4rem" }}>{lo === hi ? lo : `${lo}–${hi}`} <span className="text-xs font-sans font-normal" style={{ color: "var(--muted)" }}>kcal</span></div>
           </div>
           <div className="flex-1 mx-4">
