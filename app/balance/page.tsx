@@ -9,7 +9,7 @@ export default function BalancePage() {
   const [activityOut, setActivityOut] = useState(2000);
 
   const diff = foodIn - activityOut;          // + = surplus, - = deficit
-  const tilt = Math.max(-14, Math.min(14, diff / 90)); // beam rotation, capped
+  const tilt = Math.max(-14, Math.min(14, -diff / 90)); // beam rotation, capped
   const tooLow = activityOut - foodIn > 1000;  // eating far too little
 
   let verdict: { title: string; body: string; color: string };

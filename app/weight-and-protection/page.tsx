@@ -1,7 +1,6 @@
 import Link from "next/link";
 
-// 👇 REPLACE these with real, trusted, current resources before this goes public.
-const WHATSAPP_NUMBER = "250793226526"; // your number
+const WHATSAPP_NUMBER = "250793226526";
 const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=` + encodeURIComponent("Hi, I read the page on weight and protection, and I'd like to talk.");
 
 export default function WeightProtectionPage() {
@@ -31,36 +30,30 @@ export default function WeightProtectionPage() {
           <p>
             Most weight advice assumes the same thing: that your body is a problem to be fixed, and you simply haven&apos;t tried hard enough. For many people, that&apos;s not the truth — and it never was.
           </p>
-
           <p>
             Sometimes weight is something the body built for a reason. After difficult experiences — especially in childhood, especially abuse — the body and mind look for ways to feel safe. For some people, that has meant food: comfort, steadiness, a way to soothe something that had no other outlet. For some, body size itself became a quiet kind of armour — a way to feel less seen, less vulnerable, less of a target.
           </p>
-
           <p>
             If that resonates, please hear this clearly: <b>that was not weakness. It was survival.</b> Your body did something intelligent with what it had. The weight may have been protecting you.
           </p>
-
           <p>
             And this may <i>not</i> be your story at all — many people carry weight for reasons that have nothing to do with this. Take only what fits, and leave the rest.
           </p>
-
           <p>
             But if it does fit, it changes the conversation. Because you cannot shame your way out of something that was keeping you safe. The path forward isn&apos;t a stricter diet — it&apos;s gently, and often with help, building <i>new</i> ways to feel safe, so the old protection isn&apos;t needed as much. That is slow, compassionate work. And it is not work you have to do alone.
           </p>
         </div>
 
-        {/* support — the most important part */}
         <div className="mt-12 rounded-3xl p-7" style={{ background: "#fff", border: "1.5px solid var(--hair)" }}>
           <div className="font-serif-display font-bold text-xl mb-2" style={{ color: "var(--ink)" }}>If this opened something for you</div>
           <p className="mb-5" style={{ color: "var(--muted)" }}>
             You deserve real support — from a person, not a website. Talking to someone who understands trauma can change everything. Please consider reaching out:
           </p>
 
-          {/* 👇 REPLACE with real, trusted, current resources */}
           <div className="space-y-3 mb-5">
             <div className="rounded-xl p-4" style={{ background: "var(--paper)" }}>
-              <div className="font-semibold" style={{ color: "var(--ink)" }}>A trusted counsellor or mental-health professional</div>
-              <div className="text-sm" style={{ color: "var(--muted)" }}>[Add a local mental-health service or referral you trust — e.g. a counsellor, clinic, or national mental-health line.]</div>
+              <div className="font-semibold" style={{ color: "var(--ink)" }}>A doctor or mental-health professional</div>
+              <div className="text-sm" style={{ color: "var(--muted)" }}>Your nearest health centre or hospital can connect you with mental-health support, or refer you to someone who works with trauma. You don&apos;t need to explain everything — just that you&apos;d like to talk to someone.</div>
             </div>
             <div className="rounded-xl p-4" style={{ background: "var(--paper)" }}>
               <div className="font-semibold" style={{ color: "var(--ink)" }}>Someone you trust</div>
